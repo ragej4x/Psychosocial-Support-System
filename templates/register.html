@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Psychosocial App{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 600px;">
+    <h1 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">Create Account</h1>
+    
+    <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+        <div class="form-group">
+            <label class="form-label">I am a:</label>
+            <div class="form-radio-group">
+                <div class="form-radio">
+                    <input type="radio" id="user_type_student" name="user_type" value="student" checked>
+                    <label for="user_type_student">Student</label>
+                </div>
+                <div class="form-radio">
+                    <input type="radio" id="user_type_teacher" name="user_type" value="teacher">
+                    <label for="user_type_teacher">Teacher</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="first_name" class="form-label">First Name</label>
+            <input type="text" id="first_name" name="first_name" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="last_name" class="form-label">Last Name</label>
+            <input type="text" id="last_name" name="last_name" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="middle_name" class="form-label">Middle Name</label>
+            <input type="text" id="middle_name" name="middle_name" class="form-input" placeholder="Optional">
+        </div>
+        
+        <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" name="email" class="form-input" required>
+        </div>
+        
+        <!-- Student Fields -->
+        <div id="student_fields">
+            <div class="form-group">
+                <label for="grade" class="form-label">Grade</label>
+                <select id="grade" name="grade" class="form-select" required>
+                    <option value="">Select Grade</option>
+                    <option value="11">Grade 11</option>
+                    <option value="12">Grade 12</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="section" class="form-label">Section</label>
+                <input type="text" id="section" name="section" class="form-input" placeholder="e.g., A, B, C" required style="text-transform: uppercase;">
+                <div id="section_suggestions" class="section-suggestions"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-input" required>
+            </div>
+        </div>
+        
+        <!-- Teacher Fields -->
+        <div id="teacher_fields" style="display: none;">
+            <div class="form-group">
+                <label for="handling_grade" class="form-label">Handling Grade Year</label>
+                <select id="handling_grade" name="handling_grade" class="form-select">
+                    <option value="">Select Grade</option>
+                    <option value="11">Grade 11</option>
+                    <option value="12">Grade 12</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="handling_section" class="form-label">Handling Section</label>
+                <input type="text" id="handling_section" name="handling_section" class="form-input" placeholder="e.g., A, B, C" style="text-transform: uppercase;">
+                <div id="teacher_section_suggestions" class="section-suggestions"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher_password" class="form-label">Password</label>
+                <input type="password" id="teacher_password" name="password" class="form-input">
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block">Register</button>
+    </form>
+    
+    <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary);">
+        Already have an account? <a href="{{ url_for('login') }}" style="color: var(--primary-color); text-decoration: none;">Login here</a>
+    </p>
+</div>
+
+<script>
+    const studentFields = document.getElementById('student_fields');
+    const teacherFields = document.getElementById('teacher_fields');
+    const userTypeRadios = document.querySelectorAll('input[name="user_type"]');
+    const gradeSelect = document.getElementById('grade');
+    const sectionInput = document.getElementById('section');
+    const sectionSuggestions = document.getElementById('section_suggestions');
+    
+    // Get form elements
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const handlingGradeSelect = document.getElementById('handling_grade');
+    const handlingSectionInput = document.getElementById('handling_section');
+    const teacherPasswordInput = document.getElementById('teacher_password');
+    const studentPasswordInput = document.getElementById('password');
+    
+    // Toggle between student and teacher fields
+    userTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'student') {
+                studentFields.style.display = 'block';
+                teacherFields.style.display = 'none';
+                // Set required for student fields
+                gradeSelect.required = true;
+                sectionInput.required = true;
+                studentPasswordInput.required = true;
+                confirmPasswordInput.required = true;
+                // Enable student fields
+                gradeSelect.disabled = false;
+                sectionInput.disabled = false;
+                studentPasswordInput.disabled = false;
+                confirmPasswordInput.disabled = false;
+                // Remove required and disable teacher fields
+                handlingGradeSelect.required = false;
+                handlingSectionInput.required = false;
+                teacherPasswordInput.required = false;
+                handlingGradeSelect.disabled = true;
+                handlingSectionInput.disabled = true;
+                teacherPasswordInput.disabled = true;
+            } else {
+                studentFields.style.display = 'none';
+                teacherFields.style.display = 'block';
+                // Remove required and disable student fields
+                gradeSelect.required = false;
+                sectionInput.required = false;
+                studentPasswordInput.required = false;
+                confirmPasswordInput.required = false;
+                gradeSelect.disabled = true;
+                sectionInput.disabled = true;
+                studentPasswordInput.disabled = true;
+                confirmPasswordInput.disabled = true;
+                // Set required and enable teacher fields
+                handlingGradeSelect.required = true;
+                handlingSectionInput.required = true;
+                teacherPasswordInput.required = true;
+                handlingGradeSelect.disabled = false;
+                handlingSectionInput.disabled = false;
+                teacherPasswordInput.disabled = false;
+            }
+        });
+    });
+    
+    // Initialize required attributes and disabled state on page load
+    const checkedRadio = document.querySelector('input[name="user_type"]:checked');
+    if (checkedRadio && checkedRadio.value === 'student') {
+        gradeSelect.required = true;
+        sectionInput.required = true;
+        studentPasswordInput.required = true;
+        confirmPasswordInput.required = true;
+        gradeSelect.disabled = false;
+        sectionInput.disabled = false;
+        studentPasswordInput.disabled = false;
+        confirmPasswordInput.disabled = false;
+        handlingGradeSelect.disabled = true;
+        handlingSectionInput.disabled = true;
+        teacherPasswordInput.disabled = true;
+    } else if (checkedRadio && checkedRadio.value === 'teacher') {
+        handlingGradeSelect.required = true;
+        handlingSectionInput.required = true;
+        teacherPasswordInput.required = true;
+        handlingGradeSelect.disabled = false;
+        handlingSectionInput.disabled = false;
+        teacherPasswordInput.disabled = false;
+        gradeSelect.disabled = true;
+        sectionInput.disabled = true;
+        studentPasswordInput.disabled = true;
+        confirmPasswordInput.disabled = true;
+    }
+    
+    // Load section suggestions based on grade
+    function loadSectionSuggestions(grade, targetInput, targetSuggestions) {
+        if (grade) {
+            fetch(`/api/sections/${grade}`)
+                .then(response => response.json())
+                .then(data => {
+                    targetSuggestions.innerHTML = '';
+                    if (data.sections && data.sections.length > 0) {
+                        data.sections.forEach(section => {
+                            const chip = document.createElement('span');
+                            chip.className = 'section-chip';
+                            chip.textContent = section;
+                            chip.addEventListener('click', function() {
+                                targetInput.value = section;
+                            });
+                            targetSuggestions.appendChild(chip);
+                        });
+                    }
+                });
+        }
+    }
+    
+    gradeSelect.addEventListener('change', function() {
+        loadSectionSuggestions(this.value, sectionInput, sectionSuggestions);
+    });
+    
+    const teacherSectionSuggestions = document.getElementById('teacher_section_suggestions');
+    
+    if (handlingGradeSelect) {
+        handlingGradeSelect.addEventListener('change', function() {
+            loadSectionSuggestions(this.value, handlingSectionInput, teacherSectionSuggestions);
+        });
+        
+        handlingSectionInput.addEventListener('input', function() {
+            const input = this.value.toUpperCase();
+            const grade = handlingGradeSelect.value;
+            if (grade && input.length > 0) {
+                fetch(`/api/sections/${grade}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        teacherSectionSuggestions.innerHTML = '';
+                        const filtered = data.sections.filter(s => s.startsWith(input));
+                        filtered.forEach(section => {
+                            const chip = document.createElement('span');
+                            chip.className = 'section-chip';
+                            chip.textContent = section;
+                            chip.addEventListener('click', function() {
+                                handlingSectionInput.value = section;
+                            });
+                            teacherSectionSuggestions.appendChild(chip);
+                        });
+                    });
+            }
+        });
+    }
+    
+    // Filter sections as user types
+    sectionInput.addEventListener('input', function() {
+        const input = this.value.toUpperCase();
+        const grade = gradeSelect.value;
+        if (grade && input.length > 0) {
+            fetch(`/api/sections/${grade}`)
+                .then(response => response.json())
+                .then(data => {
+                    sectionSuggestions.innerHTML = '';
+                    const filtered = data.sections.filter(s => s.startsWith(input));
+                    filtered.forEach(section => {
+                        const chip = document.createElement('span');
+                        chip.className = 'section-chip';
+                        chip.textContent = section;
+                        chip.addEventListener('click', function() {
+                            sectionInput.value = section;
+                        });
+                        sectionSuggestions.appendChild(chip);
+                    });
+                });
+        }
+    });
+</script>
+{% endblock %}
+

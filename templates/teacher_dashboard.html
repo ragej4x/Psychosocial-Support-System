@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard - Psychosocial App{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Welcome, {{ teacher.full_name() }}</h1>
+    <div>
+        <span style="color: var(--text-secondary);">Pending Consultations:</span>
+        <span class="pending-badge">{{ pending_count }}</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">My Students (Grade {{ teacher.handling_grade }}, Section {{ teacher.handling_section }})</div>
+    {% if students %}
+    <div class="student-list">
+        {% for student in students %}
+        <a href="{{ url_for('view_student', student_id=student.id) }}" style="text-decoration: none; color: inherit;">
+            <div class="student-card" style="cursor: pointer;">
+                <div class="student-name">{{ student.full_name() }}</div>
+                <div class="student-info">
+                    Grade {{ student.grade }} - Section {{ student.section }}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <p>No students assigned to your grade and section yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-header">All Consultations</div>
+    {% if consultations %}
+    <ul class="consultation-list">
+        {% for consultation in consultations %}
+        <a href="{{ url_for('view_consultation', consultation_id=consultation.id) }}" style="text-decoration: none; color: inherit;">
+            <li class="consultation-item {{ consultation.status }}">
+                <div class="consultation-header">
+                    <div>
+                        <div class="consultation-subject">{{ consultation.subject }}</div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                            Student: {{ consultation.student.full_name() }}
+                        </div>
+                    </div>
+                    <span class="consultation-status status-{{ consultation.status }}">
+                        {{ consultation.status }}
+                    </span>
+                </div>
+                <div class="consultation-meta">
+                    <span>📅 {{ consultation.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    {% if consultation.status == 'pending' %}
+                    <span>🔴 Action Required</span>
+                    {% elif consultation.status == 'responded' %}
+                    <span>✅ Responded</span>
+                    {% endif %}
+                </div>
+            </li>
+        </a>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <p>No consultations yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-header">Teacher Information</div>
+    <p><strong>Name:</strong> {{ teacher.full_name() }}</p>
+    <p><strong>Handling:</strong> Grade {{ teacher.handling_grade }}, Section {{ teacher.handling_section }}</p>
+</div>
+{% endblock %}
+
