@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Consultation - Psychosocial App{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{% if user_type == 'student' %}{{ url_for('student_dashboard') }}{% else %}{{ url_for('teacher_dashboard') }}{% endif %}" 
+       class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="margin: 0;">{{ consultation.subject }}</h2>
+                {% if user_type == 'teacher' %}
+                <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">
+                    Student: {{ student.full_name() }} (Grade {{ student.grade }}, Section {{ student.section }})
+                </p>
+                {% endif %}
+            </div>
+            <span class="consultation-status status-{{ consultation.status }}">
+                {{ consultation.status }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>Consultation Messages</h2>
+        <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">
+            Started {{ consultation.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+        </div>
+    </div>
+    
+    <div class="chat-messages">
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="message-bubble {% if msg.sender_type == 'student' %}student{% else %}teacher{% endif %}">
+                <div class="message-author">
+                    {% if msg.sender_type == 'student' %}
+                        {% if user_type == 'student' %}You{% else %}{{ student.full_name() }}{% endif %}
+                    {% else %}
+                        {% if user_type == 'teacher' %}You{% else %}Teacher{% endif %}
+                    {% endif %}
+                </div>
+                <div class="message-text">{{ msg.message }}</div>
+                {% if msg.attachment_filename %}
+                <a href="{{ url_for('download_file', filename=msg.attachment_filename) }}" class="attachment-link" target="_blank">
+                    📎 {{ msg.attachment_filename.split('_', 2)[-1] if '_' in msg.attachment_filename else msg.attachment_filename }}
+                </a>
+                {% endif %}
+                <div class="message-time">{{ msg.created_at.strftime('%I:%M %p on %B %d') }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="empty-state" style="padding: 2rem;">
+            <p>No messages yet.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <form method="POST" action="{{ url_for('reply_consultation', consultation_id=consultation.id) }}" 
+          enctype="multipart/form-data" class="chat-form">
+        <div class="chat-form-group">
+            <textarea name="message" class="form-textarea" placeholder="Type your message..." required style="min-height: 80px;"></textarea>
+        </div>
+        <div class="chat-form-actions">
+            <label for="attachment" class="file-input-label">
+                📎 Attach File
+                <input type="file" id="attachment" name="attachment" style="display: none;" accept=".txt,.pdf,.png,.jpg,.jpeg,.gif,.doc,.docx">
+            </label>
+            <span id="file-name" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+            <button type="submit" class="btn btn-primary">Send Reply</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const fileInput = document.getElementById('attachment');
+    const fileName = document.getElementById('file-name');
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            fileName.textContent = this.files[0].name;
+        } else {
+            fileName.textContent = '';
+        }
+    });
+    
+    // Auto-scroll to bottom of messages
+    const chatMessages = document.querySelector('.chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+</script>
+{% endblock %}
+

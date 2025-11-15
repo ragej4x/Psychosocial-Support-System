@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Student - Psychosocial App{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('view_student', student_id=student.id) }}" class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);">
+        ← Back to Student Details
+    </a>
+</div>
+
+<div class="form-container" style="max-width: 700px;">
+    <h1 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">Edit Student Information</h1>
+    
+    <form method="POST" action="{{ url_for('edit_student', student_id=student.id) }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="first_name" class="form-label">First Name</label>
+                <input type="text" id="first_name" name="first_name" class="form-input" value="{{ student.first_name }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="last_name" class="form-label">Last Name</label>
+                <input type="text" id="last_name" name="last_name" class="form-input" value="{{ student.last_name }}" required>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="middle_name" class="form-label">Middle Name</label>
+            <input type="text" id="middle_name" name="middle_name" class="form-input" value="{{ student.middle_name or '' }}" placeholder="Optional">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="grade" class="form-label">Grade</label>
+                <select id="grade" name="grade" class="form-select" required>
+                    <option value="11" {% if student.grade == 11 %}selected{% endif %}>Grade 11</option>
+                    <option value="12" {% if student.grade == 12 %}selected{% endif %}>Grade 12</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="section" class="form-label">Section</label>
+                <input type="text" id="section" name="section" class="form-input" value="{{ student.section }}" required style="text-transform: uppercase;">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" name="email" class="form-input" value="{{ user.email }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password" class="form-label">New Password</label>
+            <input type="password" id="password" name="password" class="form-input" placeholder="Leave blank to keep current password" minlength="6">
+            <small style="color: var(--text-secondary); font-size: 0.85rem;">Leave blank if you don't want to change the password. Minimum 6 characters.</small>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{{ url_for('view_student', student_id=student.id) }}" class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
