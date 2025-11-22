@@ -4,6 +4,9 @@
 
 {% block content %}
 <div class="form-container">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Psychosocial App Logo" style="max-width: 200px; height: auto; margin-bottom: 1rem;">
+    </div>
     <h1 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">Login</h1>
     
     <form method="POST" action="{{ url_for('login') }}">
