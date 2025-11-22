@@ -4,11 +4,13 @@
 
 {% block content %}
 <div class="form-container" style="max-width: 600px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Psychosocial App Logo" style="max-width: 200px; height: auto; margin-bottom: 1rem;">
+    </div>
     <h1 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">Create Account</h1>
     
     <form method="POST" action="{{ url_for('register') }}" id="registerForm">
         <div class="form-group">
-            <p>Temporary User register selector you can delete this at line 10 to 23 @templates/register.html</p>
             <label class="form-label">I am a:</label>
             <div class="form-radio-group">
                 <div class="form-radio">
@@ -269,5 +271,4 @@
     });
 </script>
 {% endblock %}
-
 
