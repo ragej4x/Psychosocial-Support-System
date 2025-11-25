@@ -3,11 +3,16 @@
 {% block title %}Consultation - Psychosocial App{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1.5rem;">
+<div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
     <a href="{% if user_type == 'student' %}{{ url_for('student_dashboard') }}{% else %}{{ url_for('teacher_dashboard') }}{% endif %}" 
        class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);">
         ← Back to Dashboard
     </a>
+    {% if user_type == 'student' %}
+    <form method="POST" action="{{ url_for('delete_consultation', consultation_id=consultation.id) }}" onsubmit="return confirm('Delete this consultation? This action cannot be undone.');">
+        <button type="submit" class="btn btn-danger">Delete Consultation</button>
+    </form>
+    {% endif %}
 </div>
 
 <div class="card">

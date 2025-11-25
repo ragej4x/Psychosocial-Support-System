@@ -349,6 +349,26 @@ def reply_consultation(consultation_id):
     flash('Reply sent successfully', 'success')
     return redirect(url_for('view_consultation', consultation_id=consultation_id))
 
+
+@app.route('/consultation/<int:consultation_id>/delete', methods=['POST'])
+def delete_consultation(consultation_id):
+    if 'user_id' not in session or session.get('user_type') != 'student':
+        return redirect(url_for('login'))
+
+    student = Student.query.filter_by(user_id=session['user_id']).first()
+    consultation = Consultation.query.get_or_404(consultation_id)
+
+    if consultation.student_id != student.id:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('student_dashboard'))
+
+    db.session.delete(consultation)
+    db.session.commit()
+
+    flash('Consultation deleted successfully', 'success')
+    return redirect(url_for('student_dashboard'))
+
+
 @app.route('/teacher/student/<int:student_id>')
 def view_student(student_id):
     if 'user_id' not in session or session.get('user_type') != 'teacher':

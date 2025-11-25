@@ -12,8 +12,8 @@
     {% if consultations %}
     <ul class="consultation-list">
         {% for consultation in consultations %}
-        <a href="{{ url_for('view_consultation', consultation_id=consultation.id) }}" style="text-decoration: none; color: inherit;">
-            <li class="consultation-item {{ consultation.status }}">
+        <li class="consultation-item {{ consultation.status }}">
+            <a href="{{ url_for('view_consultation', consultation_id=consultation.id) }}" class="consultation-link">
                 <div class="consultation-header">
                     <div class="consultation-subject">{{ consultation.subject }}</div>
                     <span class="consultation-status status-{{ consultation.status }}">
@@ -28,8 +28,13 @@
                     <span>✅ Teacher responded</span>
                     {% endif %}
                 </div>
-            </li>
-        </a>
+            </a>
+            <div class="consultation-actions">
+                <form method="POST" action="{{ url_for('delete_consultation', consultation_id=consultation.id) }}" onsubmit="return confirm('Delete this consultation? This action cannot be undone.');">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
+        </li>
         {% endfor %}
     </ul>
     {% else %}
