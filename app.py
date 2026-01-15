@@ -6,8 +6,8 @@ import os
 import json
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///psychosocial.db'
+app.config['SECRET_KEY'] = 'fk9lratv'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ragejax:nyHWHm3w77axJitS4Oz5SEb7agbye5Za@dpg-d5kgh5khg0os739jsvs0-a.singapore-postgres.render.com/aczontongao'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
