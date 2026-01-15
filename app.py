@@ -48,10 +48,43 @@ def register():
             last_name = request.form.get('last_name')
             middle_name = request.form.get('middle_name', '').strip()
             email = request.form.get('email').lower().strip()
-            grade = int(request.form.get('grade'))
-            section = request.form.get('section').upper()
             password = request.form.get('password')
             confirm_password = request.form.get('confirm_password')
+            
+            # Detailed student information
+            contact_number = request.form.get('contact_number', '').strip()
+            address = request.form.get('address', '').strip()
+            emergency_contact_name = request.form.get('emergency_contact_name', '').strip()
+            emergency_contact = request.form.get('emergency_contact', '').strip()
+            adviser = request.form.get('adviser', '').strip()
+            mental_health_concern = request.form.get('mental_health_concern', '').strip()
+            help_types = request.form.getlist('help_type')
+            preferred_guidance_advocate_id = request.form.get('preferred_guidance_advocate_id', '').strip()
+            
+            # Handle grade and section
+            grade = None
+            section = None
+            
+            if preferred_guidance_advocate_id:
+                # Get advocate's grade and section
+                advocate = Teacher.query.get(int(preferred_guidance_advocate_id))
+                if not advocate:
+                    flash('Selected guidance advocate not found', 'error')
+                    return redirect(url_for('register'))
+                # Use advocate's grade and section if available, otherwise None
+                grade = advocate.handling_grade
+                section = advocate.handling_section
+            else:
+                grade_str = request.form.get('grade', '').strip()
+                if not grade_str:
+                    flash('Grade is required if you do not select a guidance advocate', 'error')
+                    return redirect(url_for('register'))
+                grade = int(grade_str)
+                
+                section = request.form.get('section', '').strip().upper()
+                if not section:
+                    flash('Section is required if you do not select a guidance advocate', 'error')
+                    return redirect(url_for('register'))
             
             if password != confirm_password:
                 flash('Passwords do not match', 'error')
@@ -75,7 +108,15 @@ def register():
                 last_name=last_name,
                 middle_name=middle_name if middle_name else None,
                 grade=grade,
-                section=section
+                section=section,
+                contact_number=contact_number if contact_number else None,
+                address=address if address else None,
+                emergency_contact_name=emergency_contact_name if emergency_contact_name else None,
+                emergency_contact=emergency_contact if emergency_contact else None,
+                adviser=adviser if adviser else None,
+                mental_health_concern=mental_health_concern if mental_health_concern else None,
+                help_types=','.join(help_types) if help_types else None,
+                preferred_guidance_advocate_id=int(preferred_guidance_advocate_id) if preferred_guidance_advocate_id else None
             )
             db.session.add(student)
             db.session.commit()
@@ -89,9 +130,30 @@ def register():
             last_name = request.form.get('last_name')
             middle_name = request.form.get('middle_name', '').strip()
             email = request.form.get('email').lower().strip()
-            handling_grade = int(request.form.get('handling_grade'))
-            handling_section = request.form.get('handling_section').upper()
             password = request.form.get('password')
+            
+            # Guidance Advocate fields
+            is_guidance_advocate = request.form.get('is_guidance_advocate') == 'on'
+            
+            if is_guidance_advocate:
+                handling_grade = None
+                handling_section = None
+                availability = request.form.get('availability', '').strip()
+                specialization = request.form.get('specialization', '').strip()
+            else:
+                handling_grade_str = request.form.get('handling_grade', '').strip()
+                if not handling_grade_str:
+                    flash('Grade is required for regular teachers', 'error')
+                    return redirect(url_for('register'))
+                handling_grade = int(handling_grade_str)
+                
+                handling_section = request.form.get('handling_section', '').strip().upper()
+                if not handling_section:
+                    flash('Section is required for regular teachers', 'error')
+                    return redirect(url_for('register'))
+                
+                availability = None
+                specialization = None
             
             if User.query.filter_by(email=email).first():
                 flash('Email already registered', 'error')
@@ -111,7 +173,10 @@ def register():
                 last_name=last_name,
                 middle_name=middle_name if middle_name else None,
                 handling_grade=handling_grade,
-                handling_section=handling_section
+                handling_section=handling_section,
+                is_guidance_advocate=is_guidance_advocate,
+                availability=availability,
+                specialization=specialization
             )
             db.session.add(teacher)
             db.session.commit()
@@ -171,6 +236,23 @@ def get_sections(grade):
         section_list = ['A', 'B', 'C', 'D', 'E']
     return jsonify({'sections': sorted(section_list)})
 
+@app.route('/api/guidance-advocates')
+def get_guidance_advocates():
+    advocates = Teacher.query.filter_by(is_guidance_advocate=True).all()
+    advocates_data = [
+        {
+            'id': advocate.id,
+            'name': advocate.full_name(),
+            'email': advocate.user.email,
+            'availability': advocate.availability,
+            'specialization': advocate.specialization,
+            'handling_section': advocate.handling_section,
+            'handling_grade': advocate.handling_grade
+        }
+        for advocate in advocates
+    ]
+    return jsonify({'advocates': advocates_data})
+
 @app.route('/student/dashboard')
 def student_dashboard():
     if 'user_id' not in session or session.get('user_type') != 'student':
@@ -194,17 +276,33 @@ def new_consultation():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        subject = request.form.get('subject')
+        category = request.form.get('category')
+        subcategory = request.form.get('subcategory')
+        help_types = request.form.getlist('help_type')
         message = request.form.get('message')
         
-        # Find teacher handling this student's grade and section
-        teacher = Teacher.query.filter_by(
-            handling_grade=student.grade,
-            handling_section=student.section
-        ).first()
+        # Create subject from category and subcategory
+        subject = f"{category} - {subcategory}"
+        help_types_str = ', '.join(help_types) if help_types else 'Not specified'
+        
+        # Determine teacher for consultation
+        teacher = None
+        
+        # If student has a preferred guidance advocate, send consultation to them
+        if student.preferred_guidance_advocate_id:
+            teacher = Teacher.query.get(student.preferred_guidance_advocate_id)
+        else:
+            # Otherwise, find teacher handling this student's grade and section
+            teacher = Teacher.query.filter_by(
+                handling_grade=student.grade,
+                handling_section=student.section
+            ).first()
         
         if not teacher:
-            flash('No teacher assigned to your grade and section', 'error')
+            if student.preferred_guidance_advocate_id:
+                flash('Your selected guidance advocate is no longer available', 'error')
+            else:
+                flash('No teacher assigned to your grade and section', 'error')
             return redirect(url_for('student_dashboard'))
         
         consultation = Consultation(
@@ -220,7 +318,7 @@ def new_consultation():
             consultation_id=consultation.id,
             sender_type='student',
             sender_id=student.id,
-            message=message
+            message=f"Help Types: {help_types_str}\n\n{message}"
         )
         db.session.add(consultation_message)
         db.session.commit()
@@ -239,11 +337,16 @@ def teacher_dashboard():
     if not teacher:
         return redirect(url_for('login'))
     
-    # Get all students under this teacher
-    students = Student.query.filter_by(
-        grade=teacher.handling_grade,
-        section=teacher.handling_section
-    ).all()
+    # Get students based on teacher role
+    if teacher.is_guidance_advocate:
+        # If guidance advocate, get students who selected this teacher as their advocate
+        students = Student.query.filter_by(preferred_guidance_advocate_id=teacher.id).all()
+    else:
+        # If regular teacher, get students by grade and section
+        students = Student.query.filter_by(
+            grade=teacher.handling_grade,
+            section=teacher.handling_section
+        ).all()
     
     # Get all consultations for this teacher
     consultations = Consultation.query.filter_by(teacher_id=teacher.id).order_by(Consultation.created_at.desc()).all()
@@ -252,6 +355,81 @@ def teacher_dashboard():
     pending_count = Consultation.query.filter_by(teacher_id=teacher.id, status='pending').count()
     
     return render_template('teacher_dashboard.html', teacher=teacher, students=students, consultations=consultations, pending_count=pending_count)
+
+@app.route('/teacher/statistics')
+def teacher_statistics():
+    if 'user_id' not in session or session.get('user_type') != 'teacher':
+        return redirect(url_for('login'))
+    
+    teacher = Teacher.query.filter_by(user_id=session['user_id']).first()
+    if not teacher:
+        return redirect(url_for('login'))
+    
+    # Get all students under this teacher
+    students = Student.query.filter_by(
+        grade=teacher.handling_grade,
+        section=teacher.handling_section
+    ).all()
+    
+    # Get all consultations for this teacher
+    consultations = Consultation.query.filter_by(teacher_id=teacher.id).all()
+    
+    # Calculate statistics
+    total_students = len(students)
+    total_consultations = len(consultations)
+    
+    # Count consultations by status
+    pending_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='pending').count()
+    read_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='read').count()
+    responded_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='responded').count()
+    
+    # Get unique sections
+    unique_sections = db.session.query(Student.section).filter_by(
+        grade=teacher.handling_grade,
+        section=teacher.handling_section
+    ).distinct().count()
+    
+    # Get consultation frequency (students with consultations)
+    students_with_consultations = db.session.query(Consultation.student_id).filter_by(
+        teacher_id=teacher.id
+    ).distinct().count()
+    
+    # Get average consultations per student
+    avg_consultations = total_consultations / total_students if total_students > 0 else 0
+    
+    # Get list of students with their consultation counts
+    student_consultation_stats = []
+    for student in students:
+        count = Consultation.query.filter_by(student_id=student.id, teacher_id=teacher.id).count()
+        student_consultation_stats.append({
+            'student': student,
+            'consultation_count': count
+        })
+    
+    # Sort by consultation count descending
+    student_consultation_stats.sort(key=lambda x: x['consultation_count'], reverse=True)
+    
+    # Get consultation status breakdown for chart
+    status_breakdown = {
+        'pending': pending_consultations,
+        'read': read_consultations,
+        'responded': responded_consultations
+    }
+    
+    statistics = {
+        'total_students': total_students,
+        'total_consultations': total_consultations,
+        'pending_consultations': pending_consultations,
+        'read_consultations': read_consultations,
+        'responded_consultations': responded_consultations,
+        'unique_sections': unique_sections,
+        'students_with_consultations': students_with_consultations,
+        'avg_consultations': round(avg_consultations, 2),
+        'students_without_consultations': total_students - students_with_consultations,
+        'status_breakdown': status_breakdown
+    }
+    
+    return render_template('teacher_statistics.html', teacher=teacher, statistics=statistics, student_stats=student_consultation_stats)
 
 @app.route('/consultation/<int:consultation_id>')
 def view_consultation(consultation_id):

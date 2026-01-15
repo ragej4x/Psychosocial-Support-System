@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Psychosocial App{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -20,6 +21,7 @@
                     <a href="{{ url_for('new_consultation') }}" class="navbar-link">New Consultation</a>
                 {% elif session.user_type == 'teacher' %}
                     <a href="{{ url_for('teacher_dashboard') }}" class="navbar-link">Dashboard</a>
+                    <a href="{{ url_for('teacher_statistics') }}" class="navbar-link">Statistics</a>
                 {% endif %}
                 <span class="navbar-link">{{ session.get('user_email', 'User') }}</span>
                 <a href="{{ url_for('logout') }}" class="btn-logout" style="text-decoration: none;">Logout</a>

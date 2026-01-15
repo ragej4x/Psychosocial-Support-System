@@ -4,24 +4,211 @@
 
 {% block content %}
 <div class="form-container">
-    <h1 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">New Consultation</h1>
+    <h1 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);"><i class="bi bi-chat-left-quote"></i> New Consultation</h1>
     
     <form method="POST" action="{{ url_for('new_consultation') }}">
-        <div class="form-group">
-            <label for="subject" class="form-label">Subject</label>
-            <input type="text" id="subject" name="subject" class="form-input" placeholder="Brief description of your concern" required>
+        <!-- Category Section -->
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Category / Kategorya</h3>
+            
+            <div class="form-group">
+                <label for="category" class="form-label">What is your concern about? / Tungkol saan ang iyong pag-aalala?</label>
+                <select id="category" name="category" class="form-input" required onchange="updateSubcategories()">
+                    <option value="">-- Select a Category --</option>
+                    <option value="family">Family & Home Situation (Problema sa Pamilya at Tahanan)</option>
+                    <option value="school">School & Academic Concerns (Mga Alalahanin sa Paaralan)</option>
+                    <option value="peers">Peer & Social Relationships (Pakikipag-ugnayan sa Iba)</option>
+                    <option value="personal">Personal Feelings & Daily Struggles (Personal na Nararamdaman)</option>
+                    <option value="life_changes">Life Changes & Adjustments (Pagbabago sa Buhay)</option>
+                    <option value="other">Other - Something Else I Want to Talk About (May iba pa akong gustong pag-usapan)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="subcategory" class="form-label">Please specify / Mangyaring tukuyin</label>
+                <select id="subcategory" name="subcategory" class="form-input" required>
+                    <option value="">-- Select a specific concern --</option>
+                </select>
+            </div>
         </div>
-        
-        <div class="form-group">
-            <label for="message" class="form-label">Message</label>
-            <textarea id="message" name="message" class="form-textarea" placeholder="Describe your concern in detail..." required></textarea>
+
+        <!-- Help Type Section -->
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">What kind of help do you want to receive? / Ano ang uri ng tulong na gusto mong matanggap?</h3>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="someone_to_talk_to">
+                        <span>I just need someone to talk to (Kailangan ko lang ng makakausap)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="feeling_overwhelmed">
+                        <span>I'm feeling overwhelmed (Pakiramdam ko ay sobra na ang bigat)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="advice_guidance">
+                        <span>I want advice or guidance (Gusto ko ng payo o gabay)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="help_concerns">
+                        <span>I need help with school or personal concerns (Kailangan ko ng tulong sa paaralan)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="urgent_help">
+                        <span>I need help urgently (Kailangan ko ng agarang tulong)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="okay_now">
+                        <span>I'm okay right now (Ayos lang ako sa ngayon)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Section -->
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Tell us more / Magbahagi ng higit pa</h3>
+            
+            <div class="form-group">
+                <label for="message" class="form-label">Message / Mensahe</label>
+                <textarea id="message" name="message" class="form-textarea" placeholder="Describe your concern in detail... / Ilarawan ang iyong pag-aalala nang detalyado..." required></textarea>
+            </div>
         </div>
         
         <div style="display: flex; gap: 1rem;">
-            <button type="submit" class="btn btn-primary">Send Consultation</button>
-            <a href="{{ url_for('student_dashboard') }}" class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);">Cancel</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Send Consultation</button>
+            <a href="{{ url_for('student_dashboard') }}" class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);"><i class="bi bi-x-circle"></i> Cancel</a>
         </div>
     </form>
 </div>
+
+<style>
+    .form-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s;
+    }
+    
+    .checkbox-label:hover {
+        background: #e9ecef;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+    
+    .checkbox-label span {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+    }
+    
+    @media print {
+        .btn {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    const categoryData = {
+        family: [
+            { value: 'family_pressure', label: 'Pressure from parents or guardians (Presyur mula sa magulang)' },
+            { value: 'family_arguments', label: 'Frequent arguments at home (Madalas na alitan sa bahay)' },
+            { value: 'family_away', label: 'Living away from parents / guardians (Hindi kasama ang magulang)' },
+            { value: 'family_unsupported', label: 'Feeling unsupported at home (Pakiramdam na walang sumusuporta)' },
+            { value: 'family_financial', label: 'Financial difficulties affecting family (Problemang pinansyal)' }
+        ],
+        school: [
+            { value: 'school_requirements', label: 'Too many school requirements (Sobrang daming gawain)' },
+            { value: 'school_difficulty', label: 'Difficulty keeping up with lessons (Hirap sumabay sa aralin)' },
+            { value: 'school_fear', label: 'Fear of disappointing teachers or parents (Takot makapag-disappoint)' },
+            { value: 'school_time', label: 'Trouble managing time (Hirap sa pamamahala ng oras)' },
+            { value: 'school_grades', label: 'Worry about grades or performance (Pag-aalala sa marka)' }
+        ],
+        peers: [
+            { value: 'peers_problems', label: 'Problems with friends (Problema sa kaibigan)' },
+            { value: 'peers_ignored', label: 'Feeling left out or ignored (Pakiramdam na napag-iiwanan)' },
+            { value: 'peers_conflict', label: 'Conflict with classmates (Alitan sa kaklase)' },
+            { value: 'peers_teased', label: 'Being teased or treated unfairly (Pinagtatawanan)' },
+            { value: 'peers_pressure', label: 'Pressure to fit in (Presyur na makisabay)' }
+        ],
+        personal: [
+            { value: 'personal_overwhelmed', label: 'Feeling overwhelmed by responsibilities (Nabibigatan ng responsibilidad)' },
+            { value: 'personal_feelings', label: 'Difficulty expressing feelings (Hirap ipahayag ang nararamdaman)' },
+            { value: 'personal_unmotivated', label: 'Feeling unmotivated or tired most days (Walang gana o pagod)' },
+            { value: 'personal_focus', label: 'Trouble focusing or concentrating (Hirap mag-focus)' },
+            { value: 'personal_misunderstood', label: 'Feeling misunderstood (Pakiramdam na hindi naiintindihan)' }
+        ],
+        life_changes: [
+            { value: 'changes_senior_high', label: 'Adjusting to senior high school (Pag-adjust sa senior high)' },
+            { value: 'changes_home_school', label: 'Changes at home or school (Pagbabago sa bahay o paaralan)' },
+            { value: 'changes_responsibilities', label: 'New responsibilities (Bagong responsibilidad)' },
+            { value: 'changes_routine', label: 'Loss of routine or structure (Pagkawala ng nakasanayang rutina)' },
+            { value: 'changes_future', label: 'Preparing for the future (Pag-aalala sa hinaharap)' }
+        ],
+        other: [
+            { value: 'other_concern', label: 'Something Else I Want to Talk About (May iba pa akong gustong pag-usapan)' }
+        ]
+    };
+    
+    function updateSubcategories() {
+        const category = document.getElementById('category').value;
+        const subcategorySelect = document.getElementById('subcategory');
+        
+        subcategorySelect.innerHTML = '<option value="">-- Select a specific concern --</option>';
+        
+        if (category && categoryData[category]) {
+            categoryData[category].forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.value;
+                opt.textContent = option.label;
+                subcategorySelect.appendChild(opt);
+            });
+        }
+    }
+</script>
 {% endblock %}
 

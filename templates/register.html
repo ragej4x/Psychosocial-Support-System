@@ -46,19 +46,61 @@
         
         <!-- Student Fields -->
         <div id="student_fields">
-            <div class="form-group">
-                <label for="grade" class="form-label">Grade</label>
-                <select id="grade" name="grade" class="form-select" required>
-                    <option value="">Select Grade</option>
-                    <option value="11">Grade 11</option>
-                    <option value="12">Grade 12</option>
-                </select>
+            <div id="grade_section_container">
+                <div class="form-group">
+                    <label for="grade" class="form-label">Grade</label>
+                    <select id="grade" name="grade" class="form-select" required>
+                        <option value="">Select Grade</option>
+                        <option value="11">Grade 11</option>
+                        <option value="12">Grade 12</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="section" class="form-label">Section</label>
+                    <input type="text" id="section" name="section" class="form-input" placeholder="e.g., A, B, C" required style="text-transform: uppercase;">
+                    <div id="section_suggestions" class="section-suggestions"></div>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label for="section" class="form-label">Section</label>
-                <input type="text" id="section" name="section" class="form-input" placeholder="e.g., A, B, C" required style="text-transform: uppercase;">
-                <div id="section_suggestions" class="section-suggestions"></div>
+
+            <!-- Detailed Student Information -->
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);"><i class="bi bi-person-lines-fill"></i> Student Information</h4>
+                
+                <div class="form-group">
+                    <label for="contact_number" class="form-label">Contact Number</label>
+                    <input type="tel" id="contact_number" name="contact_number" class="form-input" placeholder="e.g., 09123456789">
+                </div>
+
+                <div class="form-group">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea id="address" name="address" class="form-textarea" placeholder="Your home address" style="resize: vertical;"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="emergency_contact_name" class="form-label">Emergency Contact Name</label>
+                    <input type="text" id="emergency_contact_name" name="emergency_contact_name" class="form-input" placeholder="e.g., Parent/Guardian Name">
+                </div>
+
+                <div class="form-group">
+                    <label for="emergency_contact" class="form-label">Emergency Contact Number</label>
+                    <input type="tel" id="emergency_contact" name="emergency_contact" class="form-input" placeholder="e.g., 09123456789">
+                </div>
+
+                <div class="form-group">
+                    <label for="adviser" class="form-label">Class Adviser</label>
+                    <input type="text" id="adviser" name="adviser" class="form-input" placeholder="Your class adviser's name">
+                </div>
+            </div>
+
+
+            <!-- Guidance Advocate Selection -->
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0; ">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);"><i class="bi bi-people-fill"></i> Choose a Guidance Advocate (Optional)</h4>
+                
+                <div id="guidance_advocates_container" style="display: grid; gap: 1rem;">
+                    <!-- Advocates will be loaded here by JavaScript -->
+                </div>
             </div>
             
             <div class="form-group">
@@ -74,19 +116,43 @@
         
         <!-- Teacher Fields -->
         <div id="teacher_fields" style="display: none;">
-            <div class="form-group">
-                <label for="handling_grade" class="form-label">Handling Grade Year</label>
-                <select id="handling_grade" name="handling_grade" class="form-select">
-                    <option value="">Select Grade</option>
-                    <option value="11">Grade 11</option>
-                    <option value="12">Grade 12</option>
-                </select>
+            <div id="teacher_grade_section_container">
+                <div class="form-group">
+                    <label for="handling_grade" class="form-label">Handling Grade Year</label>
+                    <select id="handling_grade" name="handling_grade" class="form-select" required>
+                        <option value="">Select Grade</option>
+                        <option value="11">Grade 11</option>
+                        <option value="12">Grade 12</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="handling_section" class="form-label">Handling Section</label>
+                    <input type="text" id="handling_section" name="handling_section" class="form-input" placeholder="e.g., A, B, C" required style="text-transform: uppercase;">
+                    <div id="teacher_section_suggestions" class="section-suggestions"></div>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label for="handling_section" class="form-label">Handling Section</label>
-                <input type="text" id="handling_section" name="handling_section" class="form-input" placeholder="e.g., A, B, C" style="text-transform: uppercase;">
-                <div id="teacher_section_suggestions" class="section-suggestions"></div>
+
+            <!-- Guidance Advocate Section -->
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0; border-left: 4px solid #667eea;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="is_guidance_advocate" name="is_guidance_advocate" onchange="toggleGuidanceAdvocateFields()">
+                    <span><strong>I'm a Guidance Advocate / Kami ay Guidance Counselor</strong></span>
+                </label>
+
+                <div id="guidance_advocate_fields" style="display: none; margin-top: 1rem;">
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;"><i class="bi bi-info-circle"></i> Section field will be disabled as you are a Guidance Advocate</p>
+                    
+                    <div class="form-group">
+                        <label for="availability" class="form-label">Availability / Oras ng Availability</label>
+                        <input type="text" id="availability" name="availability" class="form-input" placeholder="e.g., Monday-Friday 9AM-5PM / Lunes-Biyernes 9AM-5PM">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="specialization" class="form-label">Specialization / Espesyalisasyon</label>
+                        <input type="text" id="specialization" name="specialization" class="form-input" placeholder="e.g., Academic Issues, Emotional Support / Akademikong Isyu, Emosyonal na Suporta">
+                    </div>
+                </div>
             </div>
             
             <div class="form-group">
@@ -217,6 +283,112 @@
         loadSectionSuggestions(this.value, sectionInput, sectionSuggestions);
     });
     
+    // Toggle guidance advocate fields for teacher
+    function toggleGuidanceAdvocateFields() {
+        const checkbox = document.getElementById('is_guidance_advocate');
+        const fields = document.getElementById('guidance_advocate_fields');
+        const containerDiv = document.getElementById('teacher_grade_section_container');
+        const handlingGradeSelect = document.getElementById('handling_grade');
+        const handlingSectionInput = document.getElementById('handling_section');
+        
+        fields.style.display = checkbox.checked ? 'block' : 'none';
+        containerDiv.style.display = checkbox.checked ? 'none' : 'block';
+        
+        // Toggle required and disabled states
+        if (checkbox.checked) {
+            handlingGradeSelect.removeAttribute('required');
+            handlingSectionInput.removeAttribute('required');
+            handlingGradeSelect.disabled = true;
+            handlingSectionInput.disabled = true;
+            handlingGradeSelect.value = '';
+            handlingSectionInput.value = '';
+        } else {
+            handlingGradeSelect.setAttribute('required', 'required');
+            handlingSectionInput.setAttribute('required', 'required');
+            handlingGradeSelect.disabled = false;
+            handlingSectionInput.disabled = false;
+        }
+    }
+    
+    // Load guidance advocates on page load
+    async function loadGuidanceAdvocates() {
+        try {
+            const response = await fetch('/api/guidance-advocates');
+            const data = await response.json();
+            const container = document.getElementById('guidance_advocates_container');
+            
+            if (data.advocates && data.advocates.length > 0) {
+                container.innerHTML = '';
+                data.advocates.forEach(advocate => {
+                    const card = document.createElement('div');
+                    card.className = 'advocate-card';
+                    card.innerHTML = `
+                        <div style="display: flex; align-items: start; gap: 1rem;">
+                            <input type="radio" id="advocate_${advocate.id}" name="preferred_guidance_advocate_id" value="${advocate.id}" style="margin-top: 0.25rem;" data-section="${advocate.handling_section}" data-grade="${advocate.handling_grade}">
+                            <div style="flex: 1;">
+                                <label for="advocate_${advocate.id}" style="cursor: pointer;">
+                                    <strong>${advocate.name}</strong>
+                                    <div style="font-size: 0.9rem; color: #666; margin-top: 0.25rem;">
+                                        <i class="bi bi-envelope"></i> ${advocate.email}
+                                    </div>
+                                    <div style="font-size: 0.9rem; color: #667eea; margin-top: 0.5rem;">
+                                        <i class="bi bi-book"></i> Grade ${advocate.handling_grade} - Section: <strong>${advocate.handling_section}</strong>
+                                    </div>
+                                    ${advocate.availability ? `<div style="font-size: 0.9rem; color: #667eea; margin-top: 0.5rem;">
+                                        <i class="bi bi-calendar-check"></i> ${advocate.availability}
+                                    </div>` : ''}
+                                    ${advocate.specialization ? `<div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                        <i class="bi bi-lightbulb"></i> ${advocate.specialization}
+                                    </div>` : ''}
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                    
+                    // Add event listener to auto-fill section
+                    const radio = card.querySelector(`#advocate_${advocate.id}`);
+                    radio.addEventListener('change', function() {
+                        if (this.checked) {
+                            const section = this.dataset.section;
+                            const grade = this.dataset.grade;
+                            document.getElementById('section').value = section;
+                            document.getElementById('grade').value = grade;
+                            // Keep fields visible and editable but not required
+                            document.getElementById('grade').removeAttribute('required');
+                            document.getElementById('section').removeAttribute('required');
+                        }
+                    });
+                    
+                    // Add event listener to all radios to make fields required when unchecked
+                    radio.addEventListener('change', function() {
+                        if (!this.checked && !document.querySelector('input[name="preferred_guidance_advocate_id"]:checked')) {
+                            // Make required again when no advocate is selected
+                            document.getElementById('grade').setAttribute('required', 'required');
+                            document.getElementById('section').setAttribute('required', 'required');
+                        }
+                    });
+                });
+            } else {
+                container.innerHTML = '<p style="color: #999;">No guidance advocates available at the moment.</p>';
+            }
+        } catch (error) {
+            console.error('Error loading guidance advocates:', error);
+        }
+    }
+    
+    // Load advocates when student type is selected
+    document.getElementById('user_type_student').addEventListener('change', function() {
+        if (this.checked) {
+            setTimeout(loadGuidanceAdvocates, 100);
+        }
+    });
+    
+    // Load advocates on page load if student is selected
+    if (document.getElementById('user_type_student').checked) {
+        loadGuidanceAdvocates();
+    }
+    
     const teacherSectionSuggestions = document.getElementById('teacher_section_suggestions');
     
     if (handlingGradeSelect) {
@@ -270,5 +442,59 @@
         }
     });
 </script>
+
+<style>
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s;
+    }
+    
+    .checkbox-label:hover {
+        background: #e9ecef;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #667eea;
+    }
+    
+    .checkbox-label span {
+        font-size: 0.95rem;
+    }
+    
+    .advocate-card {
+        border: 1px solid #ddd;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        transition: all 0.2s;
+    }
+    
+    .advocate-card:hover {
+        background: #f8f9fa;
+        border-color: #667eea;
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 0.5rem;
+        font-family: inherit;
+        font-size: 1rem;
+    }
+</style>
 {% endblock %}
 

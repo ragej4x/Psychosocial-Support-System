@@ -18,12 +18,21 @@ class Student(db.Model):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     middle_name = db.Column(db.String(100), nullable=True)
-    grade = db.Column(db.Integer, nullable=False)  # 11 or 12
-    section = db.Column(db.String(10), nullable=False)
+    grade = db.Column(db.Integer, nullable=True)  # Nullable if assigned to Guidance Advocate only
+    section = db.Column(db.String(10), nullable=True)  # Nullable if assigned to Guidance Advocate only
+    contact_number = db.Column(db.String(20), nullable=True)
+    emergency_contact = db.Column(db.String(20), nullable=True)
+    emergency_contact_name = db.Column(db.String(100), nullable=True)
+    address = db.Column(db.Text, nullable=True)
+    adviser = db.Column(db.String(100), nullable=True)
+    mental_health_concern = db.Column(db.String(100), nullable=True)
+    help_types = db.Column(db.Text, nullable=True)  # Comma-separated values
+    preferred_guidance_advocate_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', backref='student_profile')
     consultations = db.relationship('Consultation', backref='student', lazy=True)
+    preferred_advocate = db.relationship('Teacher', backref='preferred_students', foreign_keys=[preferred_guidance_advocate_id])
     
     def full_name(self):
         if self.middle_name:
@@ -36,8 +45,11 @@ class Teacher(db.Model):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     middle_name = db.Column(db.String(100), nullable=True)
-    handling_grade = db.Column(db.Integer, nullable=False)  # 11 or 12
-    handling_section = db.Column(db.String(10), nullable=False)
+    handling_grade = db.Column(db.Integer, nullable=True)  # Nullable for Guidance Advocates
+    handling_section = db.Column(db.String(10), nullable=True)  # Nullable for Guidance Advocates
+    is_guidance_advocate = db.Column(db.Boolean, default=False)
+    availability = db.Column(db.Text, nullable=True)  # e.g., "Monday-Friday 9AM-5PM"
+    specialization = db.Column(db.String(200), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', backref='teacher_profile')
