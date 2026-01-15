@@ -7,7 +7,7 @@ import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'fk9lratv'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ragejax:nyHWHm3w77axJitS4Oz5SEb7agbye5Za@dpg-d5kgh5khg0os739jsvs0-a.singapore-postgres.render.com/aczontongao'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ragejax:nyHWHm3w77axJitS4Oz5SEb7agbye5Za''@dpg-d5kgh5khg0os739jsvs0-a.singapore-postgres.render.com:5432''/aczontongao'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -627,7 +627,6 @@ if __name__ == '__main__':
     with app.app_context():
         # Drop all tables and recreate them (for development)
         # Remove this in production and use proper migrations
-        db.drop_all()
         db.create_all()
         print("Database tables created/updated successfully!")
     app.run(debug=True)
