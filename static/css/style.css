@@ -463,6 +463,8 @@ body {
 
 .message-text {
     margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .message-time {

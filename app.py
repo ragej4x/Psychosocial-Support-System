@@ -281,9 +281,23 @@ def new_consultation():
         help_types = request.form.getlist('help_type')
         message = request.form.get('message')
         
-        # Create subject from category and subcategory
-        subject = f"{category} - {subcategory}"
-        help_types_str = ', '.join(help_types) if help_types else 'Not specified'
+        # Create subject from category and subcategory, replace underscores with spaces
+        formatted_category = category.replace('_', ' ').title() if category else 'Unknown'
+        formatted_subcategory = subcategory.replace('_', ' ').title() if subcategory else 'Unknown'
+        
+        # Remove redundant category from subcategory if it starts with the same word
+        category_word = formatted_category.split()[0].lower() if formatted_category else ''
+        subcategory_word = formatted_subcategory.split()[0].lower() if formatted_subcategory else ''
+        
+        if category_word == subcategory_word:
+            # If they start with the same word, just use the subcategory
+            subject = formatted_subcategory
+        else:
+            subject = f"{formatted_category} - {formatted_subcategory}"
+        
+        # Format help types: replace underscores with spaces
+        formatted_help_types = [help_type.replace('_', ' ').title() for help_type in help_types]
+        help_types_str = ', '.join(formatted_help_types) if formatted_help_types else 'Not specified'
         
         # Determine teacher for consultation
         teacher = None
@@ -619,6 +633,32 @@ def edit_student(student_id):
     
     return render_template('edit_student.html', student=student, user=user, teacher=teacher)
 
+@app.route('/teacher/edit', methods=['GET', 'POST'])
+def edit_teacher():
+    if 'user_id' not in session or session.get('user_type') != 'teacher':
+        return redirect(url_for('login'))
+    
+    teacher = Teacher.query.filter_by(user_id=session['user_id']).first()
+    if not teacher:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        # Update teacher information
+        teacher.first_name = request.form.get('first_name', '').strip()
+        teacher.last_name = request.form.get('last_name', '').strip()
+        teacher.middle_name = request.form.get('middle_name', '').strip() or None
+        
+        # Update guidance advocate specific fields
+        if teacher.is_guidance_advocate:
+            teacher.specialization = request.form.get('specialization', '').strip() or None
+            teacher.availability = request.form.get('availability', '').strip() or None
+        
+        db.session.commit()
+        flash('Teacher information updated successfully', 'success')
+        return redirect(url_for('teacher_dashboard'))
+    
+    return render_template('edit_teacher.html', teacher=teacher)
+
 @app.route('/download/<filename>')
 def download_file(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], 'attachments', filename), as_attachment=True)
@@ -631,4 +671,3 @@ if __name__ == '__main__':
         print("Database tables created/updated successfully!")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-

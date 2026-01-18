@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Register - Psychosocial App{% endblock %}
+{% block title %}Register - R.E.A.C.H{% endblock %}
 
 {% block content %}
 <div class="form-container" style="max-width: 600px;">
     <div style="text-align: center; margin-bottom: 2rem;">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Psychosocial App Logo" style="max-width: 200px; height: auto; margin-bottom: 1rem;">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="R.E.A.C.H Logo" style="max-width: 200px; height: auto; margin-bottom: 1rem;">
     </div>
     <h1 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">Create Account</h1>
     
@@ -93,6 +93,48 @@
                 </div>
             </div>
 
+            <!-- Mental Health Concern Category -->
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0; ">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);"><i class="bi bi-chat-heart"></i> Mental Health Concerns</h4>
+                
+                <div class="form-group">
+                    <label for="mental_health_concern" class="form-label">What is your main concern? / Ano ang iyong pangunahing alalahanin?</label>
+                    <select id="mental_health_concern" name="mental_health_concern" class="form-select">
+                        <option value="">-- Select a concern --</option>
+                        <option value="academic">Academic Pressure / Presyur sa Pag-aaral</option>
+                        <option value="family">Family Issues / Problema sa Pamilya</option>
+                        <option value="social">Social & Peer Relationships / Pakikipag-ugnayan sa Ibang Tao</option>
+                        <option value="emotional">Emotional & Mental Health / Emosyonal na Kalusugan</option>
+                        <option value="future">Future Planning / Pagplano sa Kinabukasan</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">What kind of help do you want to receive? / Ano ang uri ng tulong na gusto mong matanggap?</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="help_type" value="someone_to_talk_to">
+                            <span>I just need someone to talk to / Kailangan ko lang ng makakausap</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="help_type" value="feeling_overwhelmed">
+                            <span>I'm feeling overwhelmed / Sobra na ang bigat ng nararamdaman ko</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="help_type" value="advice_guidance">
+                            <span>I want advice or guidance / Gusto ko ng payo o gabay</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="help_type" value="help_concerns">
+                            <span>I need help with school or personal concerns / Kailangan ko ng tulong sa paaralan</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="help_type" value="urgent_help">
+                            <span>I need help urgently / Kailangan ko ng agarang tulong</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
 
             <!-- Guidance Advocate Selection -->
             <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0; ">

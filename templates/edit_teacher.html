@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Teacher Information - R.E.A.C.H{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 2rem auto;">
+    <div class="card">
+        <div class="card-header" style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-person-badge"></i> Edit Teacher Information
+        </div>
+        
+        <form method="POST" style="padding: 1.5rem;">
+            <!-- Name Section -->
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Name</h4>
+                
+                <div class="form-group">
+                    <label for="first_name" class="form-label">First Name</label>
+                    <input type="text" id="first_name" name="first_name" class="form-input" 
+                           value="{{ teacher.first_name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name" class="form-label">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" class="form-input" 
+                           value="{{ teacher.last_name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="middle_name" class="form-label">Middle Name (Optional)</label>
+                    <input type="text" id="middle_name" name="middle_name" class="form-input" 
+                           value="{{ teacher.middle_name or '' }}">
+                </div>
+            </div>
+
+            <!-- Role Section -->
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Role</h4>
+                
+                <p style="margin-bottom: 1rem;">
+                    {% if teacher.is_guidance_advocate %}
+                    <span style="background: #667eea; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; display: inline-block;">
+                        <i class="bi bi-heart"></i> Guidance Advocate
+                    </span>
+                    {% else %}
+                    <span style="background: #30cfd0; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; display: inline-block;">
+                        <i class="bi bi-book"></i> Class Teacher
+                    </span>
+                    <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                        Grade {{ teacher.handling_grade }} - Section {{ teacher.handling_section }}
+                    </div>
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Guidance Advocate Fields -->
+            {% if teacher.is_guidance_advocate %}
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border-left: 4px solid #667eea;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Guidance Advocate Information</h4>
+                
+                <div class="form-group">
+                    <label for="specialization" class="form-label">Specialization</label>
+                    <input type="text" id="specialization" name="specialization" class="form-input" 
+                           placeholder="e.g., Academic Issues, Emotional Support"
+                           value="{{ teacher.specialization or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="availability" class="form-label">Availability</label>
+                    <input type="text" id="availability" name="availability" class="form-input" 
+                           placeholder="e.g., Monday-Friday 9AM-5PM"
+                           value="{{ teacher.availability or '' }}">
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn" style="flex: 1; background: #667eea; color: white; padding: 0.75rem;">
+                    <i class="bi bi-check-circle"></i> Save Changes
+                </button>
+                <a href="{{ url_for('teacher_dashboard') }}" class="btn" style="flex: 1; background: #999; color: white; padding: 0.75rem; text-align: center; text-decoration: none;">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
