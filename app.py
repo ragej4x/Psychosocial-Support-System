@@ -484,6 +484,55 @@ def view_consultation(consultation_id):
         student = Student.query.get(consultation.student_id)
         return render_template('view_consultation.html', consultation=consultation, messages=messages, current_user=teacher, user_type='teacher', student=student)
 
+
+
+@app.route('/teacher/student/<int:student_id>/delete', methods=['POST'])
+def delete_student(student_id):
+    if 'user_id' not in session or session.get('user_type') != 'teacher':
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('login'))
+    
+    teacher = Teacher.query.filter_by(user_id=session['user_id']).first()
+    if not teacher:
+        flash('Teacher not found', 'error')
+        return redirect(url_for('login'))
+    
+    student = Student.query.get_or_404(student_id)
+    
+    # Check if student is under this teacher's supervision
+    if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('teacher_dashboard'))
+    
+    try:
+        # Get user associated with student
+        user = student.user
+        
+        # Delete all consultations and messages for this student
+        consultations = Consultation.query.filter_by(student_id=student.id).all()
+        for consultation in consultations:
+            # Delete consultation messages
+            ConsultationMessage.query.filter_by(consultation_id=consultation.id).delete()
+            # Delete consultation
+            db.session.delete(consultation)
+        
+        # Delete the student record
+        db.session.delete(student)
+        
+        # Delete the user account
+        db.session.delete(user)
+        
+        db.session.commit()
+        
+        flash(f'Student {student.first_name} {student.last_name} has been deleted successfully', 'success')
+        return redirect(url_for('teacher_dashboard'))
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error deleting student: {str(e)}')
+        flash('An error occurred while deleting the student. Please try again.', 'error')
+        return redirect(url_for('view_student', student_id=student_id))
+
 @app.route('/consultation/<int:consultation_id>/reply', methods=['POST'])
 def reply_consultation(consultation_id):
     consultation = Consultation.query.get_or_404(consultation_id)
@@ -667,6 +716,7 @@ if __name__ == '__main__':
     with app.app_context():
         # Drop all tables and recreate them (for development)
         # Remove this in production and use proper migrations
+
         db.create_all()
         print("Database tables created/updated successfully!")
     port = int(os.environ.get("PORT", 5000))
