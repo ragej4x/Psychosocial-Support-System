@@ -152,6 +152,16 @@ def register():
                     flash('Section is required for regular teachers', 'error')
                     return redirect(url_for('register'))
                 
+                # Check if a teacher is already registered for this grade and section
+                existing_teacher = Teacher.query.filter_by(
+                    handling_grade=handling_grade,
+                    handling_section=handling_section,
+                    is_guidance_advocate=False
+                ).first()
+                if existing_teacher:
+                    flash('This section have already registered teacher', 'error')
+                    return redirect(url_for('register'))
+                
                 availability = None
                 specialization = None
             
