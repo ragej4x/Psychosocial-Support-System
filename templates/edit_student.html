@@ -50,6 +50,32 @@
             <input type="email" id="email" name="email" class="form-input" value="{{ user.email }}" required>
         </div>
         
+        <!-- Emergency Contact Information -->
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0;">
+            <h4 style="margin-bottom: 1rem; color: var(--text-primary);"><i class="bi bi-telephone-fill"></i> Emergency Contact Information</h4>
+            
+            <div class="form-group">
+                <label for="emergency_contact_name" class="form-label">Emergency Contact Name</label>
+                <input type="text" id="emergency_contact_name" name="emergency_contact_name" class="form-input" value="{{ student.emergency_contact_name or '' }}" placeholder="Parent/Guardian Name">
+            </div>
+
+            <div class="form-group">
+                <label for="emergency_contact" class="form-label">Emergency Contact Number</label>
+                <input type="tel" id="emergency_contact" name="emergency_contact" class="form-input" value="{{ student.emergency_contact or '' }}" placeholder="e.g., 09123456789">
+            </div>
+        </div>
+
+        <!-- Guidance Advocate Selection -->
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0;">
+            <h4 style="margin-bottom: 1rem; color: var(--text-primary);"><i class="bi bi-people-fill"></i> Preferred Guidance Advocate (Optional)</h4>
+            
+            <div id="guidance_advocates_container" style="display: grid; gap: 1rem;">
+                <!-- Advocates will be loaded here by JavaScript -->
+            </div>
+            
+            <input type="hidden" id="preferred_guidance_advocate_id" name="preferred_guidance_advocate_id" value="{{ student.preferred_guidance_advocate_id or '' }}">
+        </div>
+        
         <div class="form-group">
             <label for="password" class="form-label">New Password</label>
             <input type="password" id="password" name="password" class="form-input" placeholder="Leave blank to keep current password" minlength="6">
@@ -70,33 +96,85 @@
     </form>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteConfirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-    <div style="background: var(--background); padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%;">
-        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">Confirm Deletion</h3>
-        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-            Are you sure you want to delete <strong>{{ student.first_name }} {{ student.last_name }}</strong>? 
-            This action cannot be undone. All associated consultations and data will be permanently deleted.
-        </p>
-        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-            <button type="button" 
-                    onclick="hideDeleteConfirmation()" 
-                    class="btn" 
-                    style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);">
-                Cancel
-            </button>
-            <form method="POST" action="{{ url_for('delete_student', student_id=student.id) }}" id="deleteForm">
-                <button type="submit" 
-                        class="btn" 
-                        style="background: #dc3545; color: white; border: 2px solid #dc3545;">
-                    Yes, Delete Student
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
+// Load guidance advocates
+document.addEventListener('DOMContentLoaded', function() {
+    const advocatesContainer = document.getElementById('guidance_advocates_container');
+    const selectedAdvocateId = document.getElementById('preferred_guidance_advocate_id').value;
+    
+    fetch('/api/guidance-advocates')
+        .then(response => response.json())
+        .then(data => {
+            const advocates = data.advocates;
+            
+            // Add "None" option
+            const noneDiv = document.createElement('div');
+            noneDiv.style.cssText = 'padding: 1rem; border: 2px solid var(--border); border-radius: 0.5rem; cursor: pointer; transition: all 0.3s;';
+            noneDiv.innerHTML = `
+                <input type="radio" id="advocate_none" name="advocate_radio" value="" style="margin-right: 0.5rem;">
+                <label for="advocate_none" style="cursor: pointer; margin: 0;">No Guidance Advocate</label>
+            `;
+            if (!selectedAdvocateId) {
+                noneDiv.style.cssText += 'background: #e7f3ff; border-color: #667eea;';
+                noneDiv.querySelector('input').checked = true;
+            }
+            noneDiv.addEventListener('click', function() {
+                document.getElementById('preferred_guidance_advocate_id').value = '';
+                updateAdvocateSelection('');
+            });
+            advocatesContainer.appendChild(noneDiv);
+            
+            if (advocates.length === 0) {
+                const emptyMsg = document.createElement('p');
+                emptyMsg.style.cssText = 'color: var(--text-secondary); font-size: 0.9rem; margin: 0;';
+                emptyMsg.textContent = 'No guidance advocates available';
+                advocatesContainer.appendChild(emptyMsg);
+            } else {
+                advocates.forEach(advocate => {
+                    const advDiv = document.createElement('div');
+                    advDiv.style.cssText = 'padding: 1rem; border: 2px solid var(--border); border-radius: 0.5rem; cursor: pointer; transition: all 0.3s;';
+                    advDiv.innerHTML = `
+                        <input type="radio" id="advocate_${advocate.id}" name="advocate_radio" value="${advocate.id}" style="margin-right: 0.5rem;">
+                        <label for="advocate_${advocate.id}" style="cursor: pointer; margin: 0; font-weight: 500;">${advocate.name}</label>
+                        <div style="margin-top: 0.5rem; margin-left: 1.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                            ${advocate.specialization ? `<p style="margin: 0.25rem 0;"><strong>Specialization:</strong> ${advocate.specialization}</p>` : ''}
+                            ${advocate.availability ? `<p style="margin: 0.25rem 0;"><strong>Availability:</strong> ${advocate.availability}</p>` : ''}
+                            <p style="margin: 0.25rem 0;"><strong>Email:</strong> ${advocate.email}</p>
+                        </div>
+                    `;
+                    
+                    if (selectedAdvocateId && parseInt(selectedAdvocateId) === advocate.id) {
+                        advDiv.style.cssText += 'background: #e7f3ff; border-color: #667eea;';
+                        advDiv.querySelector('input').checked = true;
+                    }
+                    
+                    advDiv.addEventListener('click', function() {
+                        document.getElementById('preferred_guidance_advocate_id').value = advocate.id;
+                        updateAdvocateSelection(advocate.id);
+                    });
+                    advocatesContainer.appendChild(advDiv);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading advocates:', error));
+});
+
+function updateAdvocateSelection(advocateId) {
+    const advocateInputs = document.querySelectorAll('input[name="advocate_radio"]');
+    const advocateDivs = document.querySelectorAll('#guidance_advocates_container > div');
+    
+    advocateDivs.forEach(div => {
+        div.style.background = '';
+        div.style.borderColor = 'var(--border)';
+    });
+    
+    if (advocateId) {
+        document.getElementById(`advocate_${advocateId}`).parentElement.parentElement.style.cssText += 'background: #e7f3ff; border-color: #667eea;';
+    } else {
+        document.getElementById('advocate_none').parentElement.parentElement.style.cssText += 'background: #e7f3ff; border-color: #667eea;';
+    }
+}
+
 function showDeleteConfirmation() {
     document.getElementById('deleteConfirmationModal').style.display = 'flex';
 }

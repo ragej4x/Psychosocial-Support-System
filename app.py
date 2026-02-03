@@ -443,7 +443,7 @@ def teacher_statistics():
         'status_breakdown': status_breakdown
     }
     
-    return render_template('teacher_statistics.html', teacher=teacher, statistics=statistics, student_stats=student_consultation_stats)
+    return render_template('teacher_statistics.html', teacher=teacher, statistics=statistics, student_stats=student_consultation_stats, consultations=consultations)
 
 @app.route('/consultation/<int:consultation_id>')
 def view_consultation(consultation_id):
@@ -657,6 +657,20 @@ def edit_student(student_id):
         student.middle_name = middle_name if middle_name else None
         student.grade = int(request.form.get('grade', student.grade))
         student.section = request.form.get('section', student.section).upper()
+        
+        # Update emergency contact information
+        emergency_contact_name = request.form.get('emergency_contact_name', '').strip()
+        student.emergency_contact_name = emergency_contact_name if emergency_contact_name else None
+        
+        emergency_contact = request.form.get('emergency_contact', '').strip()
+        student.emergency_contact = emergency_contact if emergency_contact else None
+        
+        # Update preferred guidance advocate
+        preferred_guidance_advocate_id = request.form.get('preferred_guidance_advocate_id', '').strip()
+        if preferred_guidance_advocate_id:
+            student.preferred_guidance_advocate_id = int(preferred_guidance_advocate_id)
+        else:
+            student.preferred_guidance_advocate_id = None
         
         # Update email
         new_email = request.form.get('email', '').lower().strip()
