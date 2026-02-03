@@ -29,6 +29,12 @@
         </div>
         
         <div>
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">Emergency Contact Information</h3>
+            <p><strong>Emergency Contact Name:</strong> {{ student.emergency_contact_name or 'Not provided' }}</p>
+            <p><strong>Emergency Contact Number:</strong> {{ student.emergency_contact or 'Not provided' }}</p>
+        </div>
+        
+        <div>
             <h3 style="margin-bottom: 1rem; color: var(--text-primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">Account Information</h3>
             <p><strong>Email:</strong> {{ user.email }}</p>
             <p><strong>Account Created:</strong> {{ user.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>

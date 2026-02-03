@@ -152,6 +152,52 @@
     {% endif %}
 </div>
 
+<!-- Consultation History with Type Filter -->
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Consultation History</span>
+        <div style="display: flex; gap: 0.5rem;">
+            <select id="consultationType" class="form-select" style="padding: 0.5rem; border-radius: 0.5rem; border: 2px solid var(--border); cursor: pointer; max-width: 200px;">
+                <option value="">All Types</option>
+                <option value="Academic">Academic</option>
+                <option value="Emotional">Emotional</option>
+                <option value="Behavioral">Behavioral</option>
+                <option value="Family">Family</option>
+                <option value="Personal">Personal</option>
+            </select>
+        </div>
+    </div>
+    {% if consultations %}
+    <ul class="consultation-list" id="consultationList">
+        {% for consultation in consultations|sort(attribute='created_at', reverse=true) %}
+        <a href="{{ url_for('view_consultation', consultation_id=consultation.id) }}" style="text-decoration: none; color: inherit;" class="consultation-link" data-type="{{ consultation.subject.split('-')[0].strip() if '-' in consultation.subject else consultation.subject.split()[0] }}">
+            <li class="consultation-item {{ consultation.status }}">
+                <div class="consultation-header">
+                    <div>
+                        <div class="consultation-subject">{{ consultation.subject }}</div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                            Student: {{ consultation.student.full_name() }}
+                        </div>
+                    </div>
+                    <span class="consultation-status status-{{ consultation.status }}">
+                        {{ consultation.status }}
+                    </span>
+                </div>
+                <div class="consultation-meta">
+                    <span>📅 {{ consultation.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                </div>
+            </li>
+        </a>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <p>No consultations yet.</p>
+    </div>
+    {% endif %}
+</div>
+
 <!-- Additional Info Card -->
 <div class="card">
     <div class="card-header">Teacher Information</div>
@@ -439,4 +485,47 @@
         }
     }
 </style>
+
+<script>
+// Consultation type filtering
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('consultationType');
+    const consultationLinks = document.querySelectorAll('.consultation-link');
+    
+    typeSelect.addEventListener('change', function() {
+        const selectedType = this.value.toLowerCase();
+        let visibleCount = 0;
+        
+        consultationLinks.forEach(link => {
+            const consultationType = link.getAttribute('data-type').toLowerCase();
+            
+            if (selectedType === '' || consultationType.includes(selectedType)) {
+                link.style.display = 'block';
+                visibleCount++;
+            } else {
+                link.style.display = 'none';
+            }
+        });
+        
+        // Show "no results" message if no consultations match
+        const consultationList = document.getElementById('consultationList');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+        
+        if (visibleCount === 0) {
+            if (!noResultsMsg) {
+                const msg = document.createElement('div');
+                msg.id = 'noResultsMsg';
+                msg.style.cssText = 'text-align: center; color: var(--text-secondary); padding: 2rem;';
+                msg.innerHTML = '<p>No consultations found for this type.</p>';
+                consultationList.parentElement.appendChild(msg);
+            }
+        } else {
+            if (noResultsMsg) {
+                noResultsMsg.remove();
+            }
+        }
+    });
+});
+</script>
+
 {% endblock %}
