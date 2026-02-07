@@ -29,9 +29,9 @@
                     {% endif %}
                 </div>
             </a>
-            <div class="consultation-actions">
+            <div class="consultation-actions" style="margin-top: 0.75rem;">
                 <form method="POST" action="{{ url_for('delete_consultation', consultation_id=consultation.id) }}" onsubmit="return confirm('Delete this consultation? This action cannot be undone.');">
-                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-sm" style="width: 100%;">Delete</button>
                 </form>
             </div>
         </li>
@@ -42,16 +42,18 @@
         <div class="empty-state-icon">📋</div>
         <h3>No consultations yet</h3>
         <p>Start a new consultation to get in touch with your teacher.</p>
-        <a href="{{ url_for('new_consultation') }}" class="btn btn-primary" style="margin-top: 1rem;">Create First Consultation</a>
+        <a href="{{ url_for('new_consultation') }}" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Create First Consultation</a>
     </div>
     {% endif %}
 </div>
 
 <div class="card">
     <div class="card-header">Student Information</div>
-    <p><strong>Name:</strong> {{ student.full_name() }}</p>
-    <p><strong>Grade:</strong> {{ student.grade }}</p>
-    <p><strong>Section:</strong> {{ student.section }}</p>
+    <div style="display: grid; gap: 1rem;">
+        <div><strong>Name:</strong> <span style="display: block; margin-top: 0.25rem;">{{ student.full_name() }}</span></div>
+        <div><strong>Grade:</strong> <span style="display: block; margin-top: 0.25rem;">{{ student.grade }}</span></div>
+        <div><strong>Section:</strong> <span style="display: block; margin-top: 0.25rem;">{{ student.section }}</span></div>
+    </div>
 </div>
 {% endblock %}
 
