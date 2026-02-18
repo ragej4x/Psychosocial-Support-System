@@ -7,7 +7,7 @@ import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'fk9lratv'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ragejax:nyHWHm3w77axJitS4Oz5SEb7agbye5Za''@dpg-d5kgh5khg0os739jsvs0-a.singapore-postgres.render.com:5432''/aczontongao'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://reach_2_user:LPxy8sWuWo9zIAWOzfBMe09ko2QL1QDD@dpg-d6as17rh46gs738kng4g-a.singapore-postgres.render.com/reach_2'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -745,3 +745,4 @@ if __name__ == '__main__':
         print("Database tables created/updated successfully!")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
