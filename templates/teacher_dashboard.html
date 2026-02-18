@@ -104,5 +104,14 @@
         {% endif %}
     </div>
 </div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Archived Students</span>
+        <a href="{{ url_for('archived_students') }}" class="btn" style="background: #ff9800; color: white; border: 2px solid #ff9800; padding: 0.5rem 1rem; font-size: 0.9rem;">
+            <i class="bi bi-archive"></i> View Archived
+        </a>
+    </div>
+</div>
 {% endblock %}
 

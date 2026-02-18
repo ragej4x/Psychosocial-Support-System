@@ -170,18 +170,28 @@
     {% if consultations %}
     <ul class="consultation-list" id="consultationList">
         {% for consultation in consultations|sort(attribute='created_at', reverse=true) %}
-        <a href="{{ url_for('view_consultation', consultation_id=consultation.id) }}" style="text-decoration: none; color: inherit;" class="consultation-link" data-type="{{ consultation.subject.split('-')[0].strip() if '-' in consultation.subject else consultation.subject.split()[0] }}">
-            <li class="consultation-item {{ consultation.status }}">
+        <a href="{% if not consultation.deleted %}{{ url_for('view_consultation', consultation_id=consultation.id) }}{% else %}javascript:void(0);{% endif %}" style="text-decoration: none; color: inherit; cursor: {% if consultation.deleted %}not-allowed{% else %}pointer{% endif %};" class="consultation-link {% if consultation.deleted %}deleted-consultation{% endif %}" data-type="{{ consultation.subject.split('-')[0].strip() if '-' in consultation.subject else consultation.subject.split()[0] }}">
+            <li class="consultation-item {{ consultation.status }}" style="{% if consultation.deleted %}opacity: 0.6; background: #f8f9fa;{% endif %}">
                 <div class="consultation-header">
                     <div>
-                        <div class="consultation-subject">{{ consultation.subject }}</div>
+                        <div class="consultation-subject" style="{% if consultation.deleted %}text-decoration: line-through; color: var(--text-secondary);{% endif %}">{{ consultation.subject }}</div>
                         <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
                             Student: {{ consultation.student.full_name() }}
                         </div>
+                        {% if consultation.deleted %}
+                        <div style="color: #dc3545; font-size: 0.85rem; margin-top: 0.5rem; font-weight: 600;">
+                            <i class="bi bi-trash"></i> Deleted by {{ consultation.deleted_by }} on {{ consultation.deleted_at.strftime('%B %d, %Y') }}
+                        </div>
+                        {% endif %}
                     </div>
-                    <span class="consultation-status status-{{ consultation.status }}">
-                        {{ consultation.status }}
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="consultation-status status-{{ consultation.status }}">
+                            {{ consultation.status }}
+                        </span>
+                        {% if consultation.deleted %}
+                        <span class="consultation-status" style="background: #dc3545; color: white;">Deleted</span>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="consultation-meta">
                     <span>📅 {{ consultation.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
@@ -449,6 +459,10 @@
     
     .btn-print i {
         font-size: 1.1rem;
+    }
+    
+    .deleted-consultation {
+        pointer-events: none;
     }
     
     @media print {

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Archived Students - R.E.A.C.H{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('teacher_dashboard') }}" class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 style="margin: 0;">Archived Students</h2>
+    </div>
+    
+    {% if archived_students %}
+    <div class="student-list">
+        {% for student in archived_students %}
+        <div class="student-card" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <div class="student-name">{{ student.full_name() }}</div>
+                    <div class="student-info">
+                        {% if student.grade and student.section %}
+                        Grade {{ student.grade }} - Section {{ student.section }}
+                        {% else %}
+                        No grade/section assigned (Guidance Advocate)
+                        {% endif %}
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
+                        📅 Archived on: {{ student.archived_at.strftime('%B %d, %Y at %I:%M %p') if student.archived_at else 'Unknown' }}
+                    </div>
+                </div>
+                <form method="POST" action="{{ url_for('restore_student', student_id=student.id) }}" style="margin: 0;">
+                    <button type="submit" class="btn" style="background: #28a745; color: white; border: 2px solid #28a745; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📁</div>
+        <p>No archived students.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

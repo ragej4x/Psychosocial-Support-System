@@ -3,14 +3,19 @@
 {% block title %}Consultation - R.E.A.C.H{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+<div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
     <a href="{% if user_type == 'student' %}{{ url_for('student_dashboard') }}{% else %}{{ url_for('teacher_dashboard') }}{% endif %}" 
        class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border);">
         ← Back to Dashboard
     </a>
     {% if user_type == 'student' %}
-    <form method="POST" action="{{ url_for('delete_consultation', consultation_id=consultation.id) }}" onsubmit="return confirm('Delete this consultation? This action cannot be undone.');" style="width: 100%;">
-        <button type="submit" class="btn btn-danger" style="width: 100%;">Delete Consultation</button>
+    <form method="POST" action="{{ url_for('delete_consultation', consultation_id=consultation.id) }}" onsubmit="return confirm('Delete this consultation? This action cannot be undone.');">
+        <button type="submit" class="btn" style="background: #dc3545; color: white; border: 2px solid #dc3545;">Delete Consultation</button>
+    </form>
+    {% endif %}
+    {% if user_type == 'teacher' %}
+    <form method="POST" action="{{ url_for('delete_consultation_teacher', consultation_id=consultation.id) }}" onsubmit="return confirm('Delete this consultation? This action cannot be undone.');">
+        <button type="submit" class="btn" style="background: #dc3545; color: white; border: 2px solid #dc3545;">Delete Consultation</button>
     </form>
     {% endif %}
 </div>

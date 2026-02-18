@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import json
 
@@ -272,7 +272,7 @@ def student_dashboard():
     if not student:
         return redirect(url_for('login'))
     
-    consultations = Consultation.query.filter_by(student_id=student.id).order_by(Consultation.created_at.desc()).all()
+    consultations = Consultation.query.filter_by(student_id=student.id, deleted=False).order_by(Consultation.created_at.desc()).all()
     
     return render_template('student_dashboard.html', student=student, consultations=consultations)
 
@@ -361,24 +361,85 @@ def teacher_dashboard():
     if not teacher:
         return redirect(url_for('login'))
     
-    # Get students based on teacher role
+    # Get students based on teacher role (excluding archived)
     if teacher.is_guidance_advocate:
         # If guidance advocate, get students who selected this teacher as their advocate
-        students = Student.query.filter_by(preferred_guidance_advocate_id=teacher.id).all()
+        students = Student.query.filter_by(preferred_guidance_advocate_id=teacher.id, archived=False).all()
     else:
         # If regular teacher, get students by grade and section
         students = Student.query.filter_by(
             grade=teacher.handling_grade,
-            section=teacher.handling_section
+            section=teacher.handling_section,
+            archived=False
         ).all()
     
     # Get all consultations for this teacher
-    consultations = Consultation.query.filter_by(teacher_id=teacher.id).order_by(Consultation.created_at.desc()).all()
+    consultations = Consultation.query.filter_by(teacher_id=teacher.id, deleted=False).order_by(Consultation.created_at.desc()).all()
     
     # Count pending consultations
-    pending_count = Consultation.query.filter_by(teacher_id=teacher.id, status='pending').count()
+    pending_count = Consultation.query.filter_by(teacher_id=teacher.id, status='pending', deleted=False).count()
     
     return render_template('teacher_dashboard.html', teacher=teacher, students=students, consultations=consultations, pending_count=pending_count)
+
+@app.route('/teacher/archived-students')
+def archived_students():
+    if 'user_id' not in session or session.get('user_type') != 'teacher':
+        return redirect(url_for('login'))
+    
+    teacher = Teacher.query.filter_by(user_id=session['user_id']).first()
+    if not teacher:
+        return redirect(url_for('login'))
+    
+    # Get archived students based on teacher role
+    if teacher.is_guidance_advocate:
+        archived = Student.query.filter_by(preferred_guidance_advocate_id=teacher.id, archived=True).order_by(Student.archived_at.desc()).all()
+    else:
+        archived = Student.query.filter_by(
+            grade=teacher.handling_grade,
+            section=teacher.handling_section,
+            archived=True
+        ).order_by(Student.archived_at.desc()).all()
+    
+    return render_template('archived_students.html', teacher=teacher, archived_students=archived)
+
+@app.route('/teacher/student/<int:student_id>/restore', methods=['POST'])
+def restore_student(student_id):
+    if 'user_id' not in session or session.get('user_type') != 'teacher':
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('login'))
+    
+    teacher = Teacher.query.filter_by(user_id=session['user_id']).first()
+    if not teacher:
+        flash('Teacher not found', 'error')
+        return redirect(url_for('login'))
+    
+    student = Student.query.get_or_404(student_id)
+    
+    # Check if student is under this teacher's supervision
+    if teacher.is_guidance_advocate:
+        if student.preferred_guidance_advocate_id != teacher.id:
+            flash('Unauthorized access', 'error')
+            return redirect(url_for('archived_students'))
+    else:
+        if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
+            flash('Unauthorized access', 'error')
+            return redirect(url_for('archived_students'))
+    
+    try:
+        # Restore the student
+        student.archived = False
+        student.archived_at = None
+        
+        db.session.commit()
+        
+        flash(f'Student {student.first_name} {student.last_name} has been restored successfully', 'success')
+        return redirect(url_for('archived_students'))
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error restoring student: {str(e)}')
+        flash('An error occurred while restoring the student. Please try again.', 'error')
+        return redirect(url_for('archived_students'))
 
 @app.route('/teacher/statistics')
 def teacher_statistics():
@@ -389,13 +450,14 @@ def teacher_statistics():
     if not teacher:
         return redirect(url_for('login'))
     
-    # Get all students under this teacher
+    # Get all students under this teacher (excluding archived)
     students = Student.query.filter_by(
         grade=teacher.handling_grade,
-        section=teacher.handling_section
+        section=teacher.handling_section,
+        archived=False
     ).all()
     
-    # Get all consultations for this teacher
+    # Get all consultations for this teacher (including deleted)
     consultations = Consultation.query.filter_by(teacher_id=teacher.id).all()
     
     # Calculate statistics
@@ -403,9 +465,9 @@ def teacher_statistics():
     total_consultations = len(consultations)
     
     # Count consultations by status
-    pending_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='pending').count()
-    read_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='read').count()
-    responded_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='responded').count()
+    pending_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='pending', deleted=False).count()
+    read_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='read', deleted=False).count()
+    responded_consultations = Consultation.query.filter_by(teacher_id=teacher.id, status='responded', deleted=False).count()
     
     # Get unique sections
     unique_sections = db.session.query(Student.section).filter_by(
@@ -415,7 +477,8 @@ def teacher_statistics():
     
     # Get consultation frequency (students with consultations)
     students_with_consultations = db.session.query(Consultation.student_id).filter_by(
-        teacher_id=teacher.id
+        teacher_id=teacher.id,
+        deleted=False
     ).distinct().count()
     
     # Get average consultations per student
@@ -424,7 +487,7 @@ def teacher_statistics():
     # Get list of students with their consultation counts
     student_consultation_stats = []
     for student in students:
-        count = Consultation.query.filter_by(student_id=student.id, teacher_id=teacher.id).count()
+        count = Consultation.query.filter_by(student_id=student.id, teacher_id=teacher.id, deleted=False).count()
         student_consultation_stats.append({
             'student': student,
             'consultation_count': count
@@ -458,6 +521,17 @@ def teacher_statistics():
 @app.route('/consultation/<int:consultation_id>')
 def view_consultation(consultation_id):
     consultation = Consultation.query.get_or_404(consultation_id)
+    
+    # Check if consultation is deleted
+    if consultation.deleted:
+        flash('This consultation has been deleted', 'info')
+        if 'user_id' in session:
+            user_type = session.get('user_type')
+            if user_type == 'student':
+                return redirect(url_for('student_dashboard'))
+            else:
+                return redirect(url_for('teacher_dashboard'))
+        return redirect(url_for('login'))
     
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -510,37 +584,29 @@ def delete_student(student_id):
     student = Student.query.get_or_404(student_id)
     
     # Check if student is under this teacher's supervision
-    if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
-        flash('Unauthorized access', 'error')
-        return redirect(url_for('teacher_dashboard'))
+    if teacher.is_guidance_advocate:
+        if student.preferred_guidance_advocate_id != teacher.id:
+            flash('Unauthorized access', 'error')
+            return redirect(url_for('teacher_dashboard'))
+    else:
+        if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
+            flash('Unauthorized access', 'error')
+            return redirect(url_for('teacher_dashboard'))
     
     try:
-        # Get user associated with student
-        user = student.user
-        
-        # Delete all consultations and messages for this student
-        consultations = Consultation.query.filter_by(student_id=student.id).all()
-        for consultation in consultations:
-            # Delete consultation messages
-            ConsultationMessage.query.filter_by(consultation_id=consultation.id).delete()
-            # Delete consultation
-            db.session.delete(consultation)
-        
-        # Delete the student record
-        db.session.delete(student)
-        
-        # Delete the user account
-        db.session.delete(user)
+        # Archive the student instead of deleting
+        student.archived = True
+        student.archived_at = datetime.now(timezone.utc)
         
         db.session.commit()
         
-        flash(f'Student {student.first_name} {student.last_name} has been deleted successfully', 'success')
+        flash(f'Student {student.first_name} {student.last_name} has been archived successfully', 'success')
         return redirect(url_for('teacher_dashboard'))
         
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f'Error deleting student: {str(e)}')
-        flash('An error occurred while deleting the student. Please try again.', 'error')
+        app.logger.error(f'Error archiving student: {str(e)}')
+        flash('An error occurred while archiving the student. Please try again.', 'error')
         return redirect(url_for('view_student', student_id=student_id))
 
 @app.route('/consultation/<int:consultation_id>/reply', methods=['POST'])
@@ -613,11 +679,36 @@ def delete_consultation(consultation_id):
         flash('Unauthorized access', 'error')
         return redirect(url_for('student_dashboard'))
 
-    db.session.delete(consultation)
+    # Soft delete - mark as deleted instead of removing
+    consultation.deleted = True
+    consultation.deleted_by = 'student'
+    consultation.deleted_at = datetime.now(timezone.utc)
     db.session.commit()
 
     flash('Consultation deleted successfully', 'success')
     return redirect(url_for('student_dashboard'))
+
+
+@app.route('/consultation/<int:consultation_id>/delete-teacher', methods=['POST'])
+def delete_consultation_teacher(consultation_id):
+    if 'user_id' not in session or session.get('user_type') != 'teacher':
+        return redirect(url_for('login'))
+
+    teacher = Teacher.query.filter_by(user_id=session['user_id']).first()
+    consultation = Consultation.query.get_or_404(consultation_id)
+
+    if consultation.teacher_id != teacher.id:
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('teacher_dashboard'))
+
+    # Soft delete - mark as deleted instead of removing
+    consultation.deleted = True
+    consultation.deleted_by = 'teacher'
+    consultation.deleted_at = datetime.now(timezone.utc)
+    db.session.commit()
+
+    flash('Consultation deleted successfully', 'success')
+    return redirect(url_for('teacher_dashboard'))
 
 
 @app.route('/teacher/student/<int:student_id>')
@@ -630,6 +721,11 @@ def view_student(student_id):
         return redirect(url_for('login'))
     
     student = Student.query.get_or_404(student_id)
+    
+    # Check if student is archived
+    if student.archived:
+        flash('This student has been archived', 'info')
+        return redirect(url_for('archived_students'))
     
     # Check if student is under this teacher's supervision
     if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
@@ -651,6 +747,11 @@ def edit_student(student_id):
         return redirect(url_for('login'))
     
     student = Student.query.get_or_404(student_id)
+    
+    # Check if student is archived
+    if student.archived:
+        flash('Cannot edit an archived student. Please restore the student first.', 'info')
+        return redirect(url_for('archived_students'))
     
     # Check if student is under this teacher's supervision
     if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
@@ -740,7 +841,7 @@ if __name__ == '__main__':
     with app.app_context():
         # Drop all tables and recreate them (for development)
         # Remove this in production and use proper migrations
-
+        #db.drop_all()
         db.create_all()
         print("Database tables created/updated successfully!")
     port = int(os.environ.get("PORT", 5000))

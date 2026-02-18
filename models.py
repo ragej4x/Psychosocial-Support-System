@@ -28,6 +28,8 @@ class Student(db.Model):
     mental_health_concern = db.Column(db.String(100), nullable=True)
     help_types = db.Column(db.Text, nullable=True)  # Comma-separated values
     preferred_guidance_advocate_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=True)
+    archived = db.Column(db.Boolean, default=False)
+    archived_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', backref='student_profile')
@@ -66,6 +68,9 @@ class Consultation(db.Model):
     teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=False)
     subject = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(20), default='pending')  # 'pending', 'read', 'responded'
+    deleted = db.Column(db.Boolean, default=False)
+    deleted_by = db.Column(db.String(20), nullable=True)  # 'student' or 'teacher'
+    deleted_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
