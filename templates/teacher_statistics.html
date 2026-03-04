@@ -3,14 +3,14 @@
 {% block title %}Statistics Report - R.E.A.C.H{% endblock %}
 
 {% block content %}
-<div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
+<div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
     <div>
         <h1 class="dashboard-title"><i class="bi bi-graph-up"></i> Statistics Report</h1>
         <div style="color: var(--text-secondary);">
             Grade {{ teacher.handling_grade }}, Section {{ teacher.handling_section }}
         </div>
     </div>
-    <button onclick="window.print()" class="btn-print"><i class="bi bi-printer-fill"></i> Print Report</button>
+    <button onclick="window.print()" class="btn-print" style="white-space: nowrap;"><i class="bi bi-printer-fill"></i> Print Report</button>
 </div>
 
 <!-- Main Statistics Cards -->
@@ -154,10 +154,10 @@
 
 <!-- Consultation History with Type Filter -->
 <div class="card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <span>Consultation History</span>
-        <div style="display: flex; gap: 0.5rem;">
-            <select id="consultationType" class="form-select" style="padding: 0.5rem; border-radius: 0.5rem; border: 2px solid var(--border); cursor: pointer; max-width: 200px;">
+        <div style="display: flex; gap: 0.5rem; flex: 1; min-width: 150px; max-width: 300px;">
+            <select id="consultationType" class="form-select" style="padding: 0.5rem; border-radius: 0.5rem; border: 2px solid var(--border); cursor: pointer; width: 100%;">
                 <option value="">All Types</option>
                 <option value="Academic">Academic</option>
                 <option value="Emotional">Emotional</option>
@@ -214,10 +214,6 @@
     <p><strong>Name:</strong> {{ teacher.full_name() }}</p>
     <p><strong>Handling:</strong> Grade {{ teacher.handling_grade }}, Section {{ teacher.handling_section }}</p>
     <p><strong>Total Sections:</strong> {{ statistics.unique_sections }}</p>
-</div>
-
-<div style="margin-bottom: 2rem;">
-    <a href="{{ url_for('teacher_dashboard') }}" class="btn-primary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
 </div>
 
 <style>
@@ -498,7 +494,261 @@
             background: white;
         }
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card {
+            padding: 1rem;
+        }
+        
+        .stat-icon {
+            font-size: 1.8rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+        }
+        
+        .stats-details-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card {
+            padding: 1rem;
+        }
+        
+        .card-header {
+            font-size: 1rem;
+            padding: 0.75rem 0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .stats-table {
+            font-size: 0.85rem;
+        }
+        
+        .stats-table thead th {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .stats-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+        
+        .stat-detail-row {
+            font-size: 0.9rem;
+            padding: 0.75rem 0;
+        }
+        
+        .consultation-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .consultation-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .consultation-subject {
+            font-size: 0.95rem;
+        }
+        
+        .consultation-meta {
+            font-size: 0.8rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+        
+        .stat-card {
+            padding: 0.75rem;
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.3rem;
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+        }
+        
+        .stats-table {
+            font-size: 0.75rem;
+        }
+        
+        .stats-table thead th {
+            padding: 0.5rem 0.3rem;
+            font-size: 0.7rem;
+        }
+        
+        .stats-table tbody td {
+            padding: 0.5rem 0.3rem;
+        }
+        
+        .card {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .card-header {
+            font-size: 0.95rem;
+            padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
+        }
+        
+        .consultation-link {
+            display: flex !important;
+        }
+        
+        .status-label {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .consultation-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+    
+    /* Mobile table responsive fix */
+    @media (max-width: 768px) {
+        .students-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .students-table-wrapper table {
+            min-width: 600px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    /* Filter form mobile layout */
+    @media (max-width: 600px) {
+        .filter-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .filter-form > div {
+            flex: 1 !important;
+            min-width: unset !important;
+            width: 100%;
+        }
+        
+        .filter-form button,
+        .filter-form a {
+            width: 100%;
+        }
+        
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        
+        .card-header > div {
+            width: 100%;
+            min-width: unset !important;
+            max-width: unset !important;
+        }
+        
+        .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        
+        .dashboard-title {
+            font-size: 1.5rem;
+        }
+        
+        #consultationList {
+            max-height: 300px;
+        }
+    }
+
 </style>
+
+{% if teacher.is_guidance_advocate and all_students %}
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">All Students Directory</div>
+    
+    <div style="padding: 1.5rem; background: #f9f9f9; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+        <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Filters</h4>
+        <form method="GET" class="filter-form">
+            <div>
+                <label for="filter_grade" style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Grade</label>
+                <input type="number" id="filter_grade" name="filter_grade" value="{{ request.args.get('filter_grade', '') }}" placeholder="All grades" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.25rem; box-sizing: border-box;">
+            </div>
+            <div>
+                <label for="filter_section" style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Section</label>
+                <input type="text" id="filter_section" name="filter_section" value="{{ request.args.get('filter_section', '') }}" placeholder="All sections" maxlength="5" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.25rem; box-sizing: border-box;">
+            </div>
+            <button type="submit" style="margin-top: 2%; width: auto; height: 20px;" class="btn btn-primary">Filter</button>
+            <a href="{{ url_for('teacher_statistics') }}" class="btn" style="margin-top: 2%; width: auto; height: 20px; background: var(--background); color: var(--text-primary); border: 2px solid var(--border); text-align: center;">Clear</a>
+        </form>
+    </div>
+    
+    <div class="students-table-wrapper">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f5f5f5; border-bottom: 2px solid var(--border);">
+                    <th style="padding: 1rem; text-align: left; color: var(--text-primary); font-weight: 600;">Name</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--text-primary); font-weight: 600;">Grade</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--text-primary); font-weight: 600;">Section</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--text-primary); font-weight: 600;">Contact</th>
+                    <th style="padding: 1rem; text-align: center; color: var(--text-primary); font-weight: 600;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if all_students %}
+                    {% for student in all_students %}
+                    <tr style="border-bottom: 1px solid var(--border); hover_bg: #f9f9f9;">
+                        <td style="padding: 1rem;">{{ student.full_name() }}</td>
+                        <td style="padding: 1rem;">{{ student.grade or '-' }}</td>
+                        <td style="padding: 1rem;">{{ student.section or '-' }}</td>
+                        <td style="padding: 1rem;">{{ student.contact_number or '-' }}</td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn" style="display: inline-block; background: #667eea; color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.9rem;">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No students found matching the filters</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
 
 <script>
 // Consultation type filtering

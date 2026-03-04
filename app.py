@@ -4,6 +4,9 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timezone
 import os
 import json
+import smtplib
+from email.message import EmailMessage
+# note: credentials are hardcoded below, environment variables no longer used
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'fk9lratv'
@@ -11,6 +14,40 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://reach_2_user:LPxy8sWuWo9zI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# email settings (SMTP) - hardcoded credentials
+app.config.update({
+    'MAIL_SERVER': 'smtp.gmail.com',
+    'MAIL_PORT': 587,
+    'MAIL_USERNAME': 'aczontongao@gmail.com',
+    'MAIL_PASSWORD': 'aqkt knyc tmod skdd',  #s
+    'MAIL_USE_TLS': True,
+    'MAIL_USE_SSL': False,
+    'MAIL_DEFAULT_SENDER': 'aczontongao@gmail.com'
+})
+
+def send_email(subject, body, recipients):
+    if not recipients:
+        return
+    msg = EmailMessage()
+
+    msg['Subject'] = subject
+    msg['From'] = app.config.get('MAIL_DEFAULT_SENDER')
+    msg['To'] = ', '.join(recipients)
+    msg.set_content(body)
+    try:
+        if app.config['MAIL_USE_SSL']:
+            server = smtplib.SMTP_SSL(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
+        else:
+            server = smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
+        if app.config['MAIL_USE_TLS']:
+            server.starttls()
+        if app.config['MAIL_USERNAME'] and app.config['MAIL_PASSWORD']:
+            server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        app.logger.error(f'Error sending email: {e}')
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -24,6 +61,72 @@ db.init_app(app)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Category data for consultation mapping
+CATEGORY_DATA = {
+    'family': {
+        'label': 'Family & Home Situation',
+        'subcategories': {
+            'family_pressure': 'Pressure from Parents or Guardians',
+            'family_arguments': 'Frequent Arguments at Home',
+            'family_away': 'Living Away from Parents / Guardians',
+            'family_unsupported': 'Feeling Unsupported at Home',
+            'family_financial': 'Financial Difficulties Affecting Family'
+        }
+    },
+    'school': {
+        'label': 'School & Academic Concerns',
+        'subcategories': {
+            'school_requirements': 'Too Many School Requirements',
+            'school_difficulty': 'Difficulty Keeping Up with Lessons',
+            'school_fear': 'Fear of Disappointing Teachers or Parents',
+            'school_time': 'Trouble Managing Time',
+            'school_grades': 'Worry About Grades or Performance'
+        }
+    },
+    'peers': {
+        'label': 'Peer & Social Relationships',
+        'subcategories': {
+            'peers_problems': 'Problems with Friends',
+            'peers_ignored': 'Feeling Left Out or Ignored',
+            'peers_conflict': 'Conflict with Classmates',
+            'peers_teased': 'Being Teased or Treated Unfairly',
+            'peers_pressure': 'Pressure to Fit In'
+        }
+    },
+    'personal': {
+        'label': 'Personal Feelings & Daily Struggles',
+        'subcategories': {
+            'personal_overwhelmed': 'Feeling Overwhelmed by Responsibilities',
+            'personal_feelings': 'Difficulty Expressing Feelings',
+            'personal_unmotivated': 'Feeling Unmotivated or Tired Most Days',
+            'personal_focus': 'Trouble Focusing or Concentrating',
+            'personal_misunderstood': 'Feeling Misunderstood'
+        }
+    },
+    'life_changes': {
+        'label': 'Life Changes & Adjustments',
+        'subcategories': {
+            'changes_senior_high': 'Adjusting to Senior High School',
+            'changes_home_school': 'Changes at Home or School',
+            'changes_responsibilities': 'New Responsibilities',
+            'changes_routine': 'Loss of Routine or Structure',
+            'changes_future': 'Preparing for the Future'
+        }
+    },
+    'other': {
+        'label': 'Other',
+        'subcategories': {
+            'other_concern': 'Something Else I Want to Talk About'
+        }
+    }
+}
+
+def get_subcategory_label(category, subcategory):
+    """Get the full descriptive label for a subcategory"""
+    if category in CATEGORY_DATA and subcategory in CATEGORY_DATA[category]['subcategories']:
+        return CATEGORY_DATA[category]['subcategories'][subcategory]
+    return subcategory.replace('_', ' ').title()
 
 # Database initialization will happen in main block
 
@@ -273,7 +376,6 @@ def student_dashboard():
         return redirect(url_for('login'))
     
     consultations = Consultation.query.filter_by(student_id=student.id, deleted=False).order_by(Consultation.created_at.desc()).all()
-    
     return render_template('student_dashboard.html', student=student, consultations=consultations)
 
 @app.route('/student/consultation/new', methods=['GET', 'POST'])
@@ -291,19 +393,12 @@ def new_consultation():
         help_types = request.form.getlist('help_type')
         message = request.form.get('message')
         
-        # Create subject from category and subcategory, replace underscores with spaces
-        formatted_category = category.replace('_', ' ').title() if category else 'Unknown'
-        formatted_subcategory = subcategory.replace('_', ' ').title() if subcategory else 'Unknown'
+        # Get full descriptive labels from mapping
+        category_label = CATEGORY_DATA.get(category, {}).get('label', category)
+        subcategory_label = get_subcategory_label(category, subcategory)
         
-        # Remove redundant category from subcategory if it starts with the same word
-        category_word = formatted_category.split()[0].lower() if formatted_category else ''
-        subcategory_word = formatted_subcategory.split()[0].lower() if formatted_subcategory else ''
-        
-        if category_word == subcategory_word:
-            # If they start with the same word, just use the subcategory
-            subject = formatted_subcategory
-        else:
-            subject = f"{formatted_category} - {formatted_subcategory}"
+        # Create subject: use subcategory label as main subject (avoid redundancy)
+        subject = subcategory_label
         
         # Format help types: replace underscores with spaces
         formatted_help_types = [help_type.replace('_', ' ').title() for help_type in help_types]
@@ -351,6 +446,68 @@ def new_consultation():
         return redirect(url_for('view_consultation', consultation_id=consultation.id))
     
     return render_template('new_consultation.html', student=student)
+
+@app.route('/preconsultation', methods=['GET', 'POST'])
+def preconsultation():
+    # open access, do not require login
+    if request.method == 'POST':
+        # gather form data (student info now required)
+        student_name = request.form.get('student_name', '').strip() or 'Unknown Student'
+        grade_str = request.form.get('student_grade', '').strip()
+        section = request.form.get('student_section', '').strip().upper()
+        try:
+            grade = int(grade_str) if grade_str else None
+        except ValueError:
+            grade = None
+
+        category = request.form.get('category')
+        subcategory = request.form.get('subcategory')
+        help_types = request.form.getlist('help_type')
+        message = request.form.get('message')
+
+        # Get full descriptive labels from mapping
+        category_label = CATEGORY_DATA.get(category, {}).get('label', category)
+        subcategory_label = get_subcategory_label(category, subcategory)
+        
+        # Create subject: use subcategory label as main subject
+        subject = f"Preconsultation: {subcategory_label}"
+
+        formatted_help_types = [help_type.replace('_', ' ').title() for help_type in help_types]
+        help_types_str = ', '.join(formatted_help_types) if formatted_help_types else 'Not specified'
+
+        # determine recipients based on provided grade/section
+        recipients = []
+        assigned = None
+        if grade is not None and section:
+            assigned = Teacher.query.filter_by(
+                handling_grade=grade,
+                handling_section=section
+            ).first()
+        if assigned and assigned.user and assigned.user.email:
+            recipients.append(assigned.user.email)
+
+        advocates = Teacher.query.filter_by(is_guidance_advocate=True).all()
+        for adv in advocates:
+            if adv.user and adv.user.email and adv.user.email not in recipients:
+                recipients.append(adv.user.email)
+
+        if not recipients:
+            flash('No recipients found for preconsultation', 'error')
+            return redirect(url_for('preconsultation'))
+
+        email_body = f"Student: {student_name}\n"
+        if grade is not None and section:
+            email_body += f"Grade {grade} {section}\n"
+        email_body += f"\nHelp Types: {help_types_str}\n\nMessage:\n{message}"
+        try:
+            send_email(subject, email_body, recipients)
+            flash('Preconsultation emailed to counselor(s) successfully', 'success')
+        except Exception:
+            flash('Failed to send preconsultation email. Please try again.', 'error')
+        return redirect(url_for('preconsultation'))
+
+    # GET just render blank form
+    return render_template('preconsultation.html')
 
 @app.route('/teacher/dashboard')
 def teacher_dashboard():
@@ -457,6 +614,22 @@ def teacher_statistics():
         archived=False
     ).all()
     
+    # If guidance advocate, get all students for filter
+    all_students = None
+    if teacher.is_guidance_advocate:
+        all_students = Student.query.filter_by(archived=False).all()
+        # Apply filter if provided
+        filter_grade = request.args.get('filter_grade', '').strip()
+        filter_section = request.args.get('filter_section', '').strip().upper()
+        if filter_grade:
+            try:
+                grade_int = int(filter_grade)
+                all_students = [s for s in all_students if s.grade == grade_int]
+            except ValueError:
+                pass
+        if filter_section:
+            all_students = [s for s in all_students if s.section == filter_section]
+    
     # Get all consultations for this teacher (including deleted)
     consultations = Consultation.query.filter_by(teacher_id=teacher.id).all()
     
@@ -516,7 +689,7 @@ def teacher_statistics():
         'status_breakdown': status_breakdown
     }
     
-    return render_template('teacher_statistics.html', teacher=teacher, statistics=statistics, student_stats=student_consultation_stats, consultations=consultations)
+    return render_template('teacher_statistics.html', teacher=teacher, statistics=statistics, student_stats=student_consultation_stats, consultations=consultations, all_students=all_students)
 
 @app.route('/consultation/<int:consultation_id>')
 def view_consultation(consultation_id):
@@ -728,9 +901,11 @@ def view_student(student_id):
         return redirect(url_for('archived_students'))
     
     # Check if student is under this teacher's supervision
-    if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
-        flash('Unauthorized access', 'error')
-        return redirect(url_for('teacher_dashboard'))
+    # Guidance counselors can view any non-archived student; regular teachers can only view students in their section
+    if not teacher.is_guidance_advocate:
+        if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
+            flash('Unauthorized access', 'error')
+            return redirect(url_for('teacher_dashboard'))
     
     user = student.user
     consultations = Consultation.query.filter_by(student_id=student.id).order_by(Consultation.created_at.desc()).all()
@@ -754,9 +929,11 @@ def edit_student(student_id):
         return redirect(url_for('archived_students'))
     
     # Check if student is under this teacher's supervision
-    if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
-        flash('Unauthorized access', 'error')
-        return redirect(url_for('teacher_dashboard'))
+    # Guidance counselors can edit any student; regular teachers can only edit students in their section
+    if not teacher.is_guidance_advocate:
+        if student.grade != teacher.handling_grade or student.section != teacher.handling_section:
+            flash('Unauthorized access', 'error')
+            return redirect(url_for('teacher_dashboard'))
     
     user = student.user
     
