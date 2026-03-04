@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Preconsultation - R.E.A.C.H{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 650px;">
+    <h1 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary); font-size: 1.5rem;"><i class="bi bi-people-fill"></i> Preconsultation (Guidance Counselors)</h1>
+    
+    <form method="POST" action="{{ url_for('preconsultation') }}">
+        <!-- Student info for unauthenticated users -->
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">Student Information</h3>
+            <div class="form-group">
+                <label for="student_name" class="form-label">Name</label>
+                <input type="text" id="student_name" name="student_name" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="student_grade" class="form-label">Grade</label>
+                <input type="number" id="student_grade" name="student_grade" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="student_section" class="form-label">Section</label>
+                <input type="text" id="student_section" name="student_section" class="form-input" required>
+            </div>
+        </div>
+        <!-- Original consultation fields -->
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">Category / Kategorya</h3>
+            <div class="form-group">
+                <label for="category" class="form-label">What is your concern about?</label>
+                <select id="category" name="category" class="form-input" required onchange="updateSubcategories()">
+                    <option value="">-- Select a Category --</option>
+                    <option value="family">Family & Home Situation</option>
+                    <option value="school">School & Academic Concerns</option>
+                    <option value="peers">Peer & Social Relationships</option>
+                    <option value="personal">Personal Feelings & Daily Struggles</option>
+                    <option value="life_changes">Life Changes & Adjustments</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="subcategory" class="form-label">Please specify</label>
+                <select id="subcategory" name="subcategory" class="form-input" required>
+                    <option value="">-- Select a specific concern --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">What kind of help do you want to receive?</h3>
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="someone_to_talk_to">
+                        <span>I just need someone to talk to</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="feeling_overwhelmed">
+                        <span>I'm feeling overwhelmed</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="advice_guidance">
+                        <span>I want advice or guidance</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="help_concerns">
+                        <span>I need help with school or personal concerns</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="help_type" value="urgent_help">
+                        <span>I need help urgently</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">Tell us more</h3>
+            <div class="form-group">
+                <label for="message" class="form-label">Message</label>
+                <textarea id="message" name="message" class="form-textarea" placeholder="Describe your concern in detail..." required></textarea>
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="bi bi-send"></i> Send to Guidance Counselors</button>
+            <a href="{{ url_for('student_dashboard') }}" class="btn" style="background: var(--background); color: var(--text-primary); border: 2px solid var(--border); width: 100%; text-align: center;"><i class="bi bi-x-circle"></i> Cancel</a>
+        </div>
+    </form>
+</div>
+<style>
+    .form-section { background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 1rem; }
+    .checkbox-label { display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; padding: 0.5rem; border-radius: 0.5rem; }
+    .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #667eea; margin-top: 0.25rem; }
+</style>
+
+<script>
+    const categoryData = {
+        family: [ { value: 'family_pressure', label: 'Pressure from parents or guardians' }, { value: 'family_arguments', label: 'Frequent arguments at home' }, { value: 'family_away', label: 'Living away from parents / guardians' }, { value: 'family_unsupported', label: 'Feeling unsupported at home' }, { value: 'family_financial', label: 'Financial difficulties affecting family' } ],
+        school: [ { value: 'school_requirements', label: 'Too many school requirements' }, { value: 'school_difficulty', label: 'Difficulty keeping up with lessons' }, { value: 'school_fear', label: 'Fear of disappointing teachers or parents' }, { value: 'school_time', label: 'Trouble managing time' }, { value: 'school_grades', label: 'Worry about grades or performance' } ],
+        peers: [ { value: 'peers_problems', label: 'Problems with friends' }, { value: 'peers_ignored', label: 'Feeling left out or ignored' }, { value: 'peers_conflict', label: 'Conflict with classmates' }, { value: 'peers_teased', label: 'Being teased or treated unfairly' }, { value: 'peers_pressure', label: 'Pressure to fit in' } ],
+        personal: [ { value: 'personal_overwhelmed', label: 'Feeling overwhelmed by responsibilities' }, { value: 'personal_feelings', label: 'Difficulty expressing feelings' }, { value: 'personal_unmotivated', label: 'Feeling unmotivated or tired most days' }, { value: 'personal_focus', label: 'Trouble focusing or concentrating' }, { value: 'personal_misunderstood', label: 'Feeling misunderstood' } ],
+        life_changes: [ { value: 'changes_senior_high', label: 'Adjusting to senior high school' }, { value: 'changes_home_school', label: 'Changes at home or school' }, { value: 'changes_responsibilities', label: 'New responsibilities' }, { value: 'changes_routine', label: 'Loss of routine or structure' }, { value: 'changes_future', label: 'Preparing for the future' } ],
+        other: [ { value: 'other_concern', label: 'Something Else I Want to Talk About' } ]
+    };
+    function updateSubcategories() {
+        const category = document.getElementById('category').value;
+        const subcategorySelect = document.getElementById('subcategory');
+        subcategorySelect.innerHTML = '<option value="">-- Select a specific concern --</option>';
+        if (category && categoryData[category]) {
+            categoryData[category].forEach(option => {
+                const opt = document.createElement('option'); opt.value = option.value; opt.textContent = option.label; subcategorySelect.appendChild(opt);
+            });
+        }
+    }
+</script>
+
+{% endblock %}
