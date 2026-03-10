@@ -4,8 +4,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timezone
 import os
 import json
-import smtplib
-from email.message import EmailMessage
+import requests
 # note: credentials are hardcoded below, environment variables no longer used
 
 app = Flask(__name__)
@@ -15,39 +14,49 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# email settings (SMTP) - hardcoded credentials
+# email settings (EmailJS API) - hardcoded credentials
 app.config.update({
-    'MAIL_SERVER': 'smtp.gmail.com',
-    'MAIL_PORT': 587,
-    'MAIL_USERNAME': 'aczontongao@gmail.com',
-    'MAIL_PASSWORD': 'aqkt knyc tmod skdd',  #s
-    'MAIL_USE_TLS': True,
-    'MAIL_USE_SSL': False,
-    'MAIL_DEFAULT_SENDER': 'aczontongao@gmail.com'
+    'EMAILJS_SERVICE_ID': 'service_c9b6wx5',
+    'EMAILJS_TEMPLATE_ID': 'template_mdmvj9a',
+    'EMAILJS_USER_ID': 'nDDLNva4KywhKAgkL',
+    'EMAILJS_ACCESS_TOKEN': 'V1KYOOarU9bDrF6Sf3Hyk',
+    'MAIL_DEFAULT_SENDER': 'noreply@yourdomain.com'
 })
 
 def send_email(subject, body, recipients):
     if not recipients:
         return
-    msg = EmailMessage()
-
-    msg['Subject'] = subject
-    msg['From'] = app.config.get('MAIL_DEFAULT_SENDER')
-    msg['To'] = ', '.join(recipients)
-    msg.set_content(body)
     try:
-        if app.config['MAIL_USE_SSL']:
-            server = smtplib.SMTP_SSL(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
-        else:
-            server = smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
-        if app.config['MAIL_USE_TLS']:
-            server.starttls()
-        if app.config['MAIL_USERNAME'] and app.config['MAIL_PASSWORD']:
-            server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
-        server.send_message(msg)
-        server.quit()
+        # Convert list to comma-separated string if needed
+        recipient_str = recipients if isinstance(recipients, str) else ', '.join(recipients)
+        print(f"DEBUG: Sending email to {recipient_str} with subject '{subject}'")
+        
+        url = "https://api.emailjs.com/api/v1.0/email/send"
+        data = {
+            "service_id": app.config['EMAILJS_SERVICE_ID'],
+            "template_id": app.config['EMAILJS_TEMPLATE_ID'],
+            "user_id": app.config['EMAILJS_USER_ID'],
+            "accessToken": app.config['EMAILJS_ACCESS_TOKEN'],
+            "template_params": {
+                "to_email": recipient_str,
+                "subject": subject,
+                "message": body
+            }
+        }
+        
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(url, json=data, headers=headers, timeout=10)
+        
+        print(f"DEBUG: EmailJS response status: {response.status_code}")
+        print(f"DEBUG: EmailJS response text: {response.text}")
+        
+        if response.status_code not in [200, 201, 202]:
+            raise Exception(f"EmailJS error: {response.text}")
+        
+        print(f"DEBUG: Email sent successfully to {recipient_str}")
     except Exception as e:
-        app.logger.error(f'Error sending email: {e}')
+        print(f"DEBUG: Email send error: {e}")
+        raise
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -442,6 +451,38 @@ def new_consultation():
         db.session.add(consultation_message)
         db.session.commit()
         
+        # Send email notification to guidance advocates
+        recipients = []
+        advocates = Teacher.query.filter_by(is_guidance_advocate=True).all()
+        print(f"DEBUG: Found {len(advocates)} guidance advocates")
+        for adv in advocates:
+            if adv.user and adv.user.email:
+                recipients.append(adv.user.email)
+                print(f"DEBUG: Added recipient: {adv.user.email}")
+        
+        print(f"DEBUG: Total recipients for email: {len(recipients)}")
+        if recipients:
+            email_subject = f"New Consultation: {student.full_name()} - {subcategory_label}"
+            email_body = f"New consultation from: {student.full_name()}\n"
+            if student.grade and student.section:
+                email_body += f"Grade {student.grade} {student.section}\n"
+            email_body += f"\nCategory: {category_label}\n"
+            email_body += f"Specific Concern: {subcategory_label}\n"
+            email_body += f"Help Types: {help_types_str}\n\n"
+            email_body += f"Message:\n{message}\n\n"
+            email_body += f"Assigned to: {teacher.full_name()}\n"
+            email_body += f"Consultation ID: {consultation.id}"
+            
+            print(f"DEBUG: Sending email with subject: {email_subject}")
+            try:
+                send_email(email_subject, email_body, recipients)
+                print(f"DEBUG: Email notification sent for new consultation {consultation.id}")
+            except Exception as e:
+                print(f"DEBUG: Failed to send email notification for consultation {consultation.id}: {e}")
+                # Don't fail the consultation creation if email fails
+        else:
+            print("DEBUG: No recipients found for email notification")
+        
         flash('Consultation created successfully', 'success')
         return redirect(url_for('view_consultation', consultation_id=consultation.id))
     
@@ -464,6 +505,13 @@ def preconsultation():
         subcategory = request.form.get('subcategory')
         help_types = request.form.getlist('help_type')
         message = request.form.get('message')
+        
+        # New fields
+        talked_before = request.form.get('talked_before')
+        who_talked = request.form.get('who_talked')
+        who_other_text = request.form.get('who_other_text', '').strip()
+        last_time = request.form.get('last_time', '').strip()
+        talked_someone = request.form.get('talked_someone')
 
         # Get full descriptive labels from mapping
         category_label = CATEGORY_DATA.get(category, {}).get('label', category)
@@ -499,6 +547,21 @@ def preconsultation():
         if grade is not None and section:
             email_body += f"Grade {grade} {section}\n"
         email_body += f"\nHelp Types: {help_types_str}\n\nMessage:\n{message}"
+        
+        # Add new fields
+        email_body += f"\n\nPrevious Counseling Experience:\n"
+        email_body += f"Has talked to counselor/therapist/psychologist before: {talked_before.title()}\n"
+        if talked_before == 'yes':
+            who = who_talked
+            if who == 'other' and who_other_text:
+                who = who_other_text
+            elif who:
+                who = who.replace('_', ' ').title()
+            else:
+                who = 'Not specified'
+            email_body += f"Who: {who}\n"
+            email_body += f"Last time: {last_time}\n"
+        email_body += f"\nHas talked to someone about the problem: {talked_someone.replace('_', ' ').title() if talked_someone else 'Not specified'}\n"
         try:
             send_email(subject, email_body, recipients)
             flash('Preconsultation emailed to counselor(s) successfully', 'success')

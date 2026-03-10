@@ -23,6 +23,82 @@
                 <input type="text" id="student_section" name="student_section" class="form-input" required>
             </div>
         </div>
+        <!-- Previous Counseling Experience -->
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">Previous Counseling Experience</h3>
+            <div class="form-group">
+                <label class="form-label">Have you ever talked to a counselor, therapist or psychologist before?</label>
+                <div style="display: flex; gap: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="radio" id="talked_yes" name="talked_before" value="yes" required>
+                        <span>Yes</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="radio" id="talked_no" name="talked_before" value="no" required>
+                        <span>No</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="talked_details" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">If yes, who did you talk to?</label>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="radio" name="who_talked" value="school_counselor">
+                            <span>School councelor</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="radio" name="who_talked" value="therapist">
+                            <span>Therapist</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="radio" name="who_talked" value="psychologist">
+                            <span>Psychologist</span>
+                        </label>
+                        <label style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                            <input type="radio" id="who_other" name="who_talked" value="other">
+                            <span>Other:</span>
+                            <input type="text" id="who_other_text" name="who_other_text" style="flex: 1; margin-left: 0;" disabled>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_time" class="form-label">When was the last time you talked to them?</label>
+                    <input type="text" id="last_time" name="last_time" class="form-input" placeholder="e.g., Last month, 2 years ago">
+                </div>
+            </div>
+        </div>
+
+        <!-- Talked to Someone -->
+        <div class="form-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">Have you talked to someone about your problem?</h3>
+            <div class="form-group">
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="radio" name="talked_someone" value="parent" required>
+                        <span>Parent</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="radio" name="talked_someone" value="teacher" required>
+                        <span>Teacher</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="radio" name="talked_someone" value="friend" required>
+                        <span>Friend</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="radio" name="talked_someone" value="counselor" required>
+                        <span>Councelor</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="radio" name="talked_someone" value="no_one_yet" required>
+                        <span>No one yet</span>
+                    </label>
+                </div>
+            </div>
+        </div>
         <!-- Original consultation fields -->
         <div class="form-section">
             <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">Category / Kategorya</h3>
@@ -115,6 +191,33 @@
             });
         }
     }
+
+    // New script for conditional display
+    document.addEventListener('DOMContentLoaded', function() {
+        const talkedYes = document.getElementById('talked_yes');
+        const talkedNo = document.getElementById('talked_no');
+        const talkedDetails = document.getElementById('talked_details');
+        const whoOther = document.getElementById('who_other');
+        const whoOtherText = document.getElementById('who_other_text');
+        
+        function toggleTalkedDetails() {
+            if (talkedYes.checked) {
+                talkedDetails.style.display = 'block';
+            } else {
+                talkedDetails.style.display = 'none';
+            }
+        }
+        
+        talkedYes.addEventListener('change', toggleTalkedDetails);
+        talkedNo.addEventListener('change', toggleTalkedDetails);
+        
+        whoOther.addEventListener('change', function() {
+            whoOtherText.disabled = !whoOther.checked;
+            if (!whoOther.checked) {
+                whoOtherText.value = '';
+            }
+        });
+    });
 </script>
 
 {% endblock %}

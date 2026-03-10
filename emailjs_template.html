@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{subject}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background: linear-gradient(135deg, #50C878 0%, #84c194 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .email-header p {
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .email-body {
+            padding: 30px 20px;
+        }
+        .email-body h2 {
+            color: #333333;
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .message-content {
+            color: #555555;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .email-footer {
+            background-color: #f9f9f9;
+            border-top: 1px solid #eeeeee;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999999;
+        }
+        .footer-text {
+            margin: 5px 0;
+        }
+        .divider {
+            height: 1px;
+            background-color: #eeeeee;
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid #50C878;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .info-label {
+            color: #50C878;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .info-value {
+            color: #333333;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="email-header">
+            <h1>R.E.A.C.H Psychosocial Support System</h1>
+            <p>Consultation Notification</p>
+        </div>
+
+        <!-- Body -->
+        <div class="email-body">
+            <h2>New Consultation Request</h2>
+            
+            <div class="info-box">
+                <div class="info-label">Subject</div>
+                <div class="info-value">{{subject}}</div>
+            </div>
+
+            <h2 style="margin-top: 25px;">Message Details</h2>
+            <div class="message-content">{{message}}</div>
+
+            <div class="divider"></div>
+
+            <p style="color: #666666; font-size: 13px; margin-top: 20px;">
+                This is an automated notification from the R.E.A.C.H Psychosocial Support System. 
+                Please log in to your account to respond to this consultation.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="email-footer">
+            <div class="footer-text">
+                <strong>R.E.A.C.H</strong> - Psychosocial Support System
+            </div>
+            <div class="footer-text">
+                © 2026 All Rights Reserved
+            </div>
+            <div class="footer-text" style="margin-top: 10px; font-size: 11px;">
+                This email was sent to: {{to_email}}
+            </div>
+            <div class="footer-text" style="font-size: 11px;">
+                Please do not reply to this email. Use the system to respond.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
